@@ -8,7 +8,7 @@ import unittest
 
 class Simulation:
     def __init__(self, baseStationLocations, baseStationPowerTxs, rssiN=2, rssiStdDev=1, speedSound=343,
-                 vehiclePose=(0, 0, 0)):
+                 totStdDev=1e-3, vehiclePose=(0, 0, 0)):
         '''
         baseStationLocations is a list of tuples of the form (x, y) specifying location in meters
         baseStationPowerTxs is a list of transmit powers at 1 meter
@@ -19,6 +19,7 @@ class Simulation:
         self.rssiN = rssiN
         self.rssiStdDev = rssiStdDev
         self.speedSound = speedSound
+        self.totStdDev = totStdDev
         self.vehiclePose = np.array(vehiclePose)
 
     def getDistances(self):
