@@ -5,9 +5,11 @@ import numpy as np
 import unittest
 
 class BicycleModel:
-    def __init__(self, centerToFront, centerToRear, plot=False):
-        self.lf = centerToFront
-        self.lr = centerToRear
+    def __init__(self, wheelbase, plot=False):
+        '''
+        Reference point is center of rear wheel
+        '''
+        self.l = wheelbase
         self.plot = plot
         if plot:
             self.plotInit()
@@ -27,13 +29,10 @@ class BicycleModel:
         v = action[0]
         delta = action[1]
 
-        # sideslip angle
-        beta = math.atan(self.lr * math.tan(delta) / (self.lf + self.lr))
-
         # kinematics
-        xDot = v * math.cos(state[2] + beta)
-        yDot = v * math.sin(state[2] + beta)
-        thetaDot = v * math.cos(beta) * math.tan(delta) / (self.lf + self.lr)
+        xDot = v * math.cos(state[2])
+        yDot = v * math.sin(state[2])
+        thetaDot = v * math.tan(delta) / (self.l)
         stateDot = np.array([xDot, yDot, thetaDot])
 
         # calculate next state
@@ -62,10 +61,10 @@ class BicycleModel:
         #print((yaw + steer_angle) * 180 / math.pi)
 
         # vehicle axles
-        xr = x - self.lr * math.cos(yaw)
-        yr = y - self.lr * math.sin(yaw)
-        xf = x + self.lf * math.cos(yaw)
-        yf = y + self.lf * math.sin(yaw)
+        xr = x
+        yr = y
+        xf = x + self.l * math.cos(yaw)
+        yf = y + self.l * math.sin(yaw)
 
         self.ax.scatter(x, y, color='black') # body center
         self.ax.plot([xr, xf], [yr, yf], color='blue') # body
@@ -75,7 +74,7 @@ class BicycleModel:
     
 class Test(unittest.TestCase):
     def testKinematic(self):
-        bm = BicycleModel(centerToFront=1.0, centerToRear=1.0, plot=True)
+        bm = BicycleModel(wheelbase=2.0, plot=True)
         pose = np.zeros(3)
         action = [10.0, math.pi / 18]
         for i in range(100):
