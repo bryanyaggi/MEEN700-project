@@ -7,6 +7,16 @@ import numpy as np
 from simulation import Simulation
 
 import unittest
+    
+def residualFunYaw(a, b):
+    '''
+    Keeps residual in range (-pi, pi]
+    '''
+    y = a - b
+    y[0] %= (2 * np.pi)
+    if y[0] > np.pi:
+        y[0] -= (2 * np.pi)
+    return y
 
 class Localization:
     def __init__(self, baseStationLocations, baseStationPowerTxs, rssiN=2, speedSound=343, vehiclePose=(0, 0, 0)):
@@ -41,14 +51,14 @@ class Localization:
         ranges = 10 ** ((self.baseStationPowerTxs - rssiMeasurements) / (10 * self.rssiN))
         return ranges
 
-    def hFun(self, baseStationIndex):
+    def hFunRssi(self, baseStationIndex):
         '''
         Returns function for h(x), which calculates the expected z given x
         '''
         xBs, yBs = self.baseStationLocations[baseStationIndex]
-        return lambda x: ((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2) ** 0.5
+        return lambda x: np.array([((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2) ** 0.5])
 
-    def hMatrixFun(self, baseStationIndex):
+    def hMatrixFunRssi(self, baseStationIndex):
         '''
         Returns function for H
         '''
@@ -60,13 +70,15 @@ class Localization:
 
     def incorporateRssiMeasurements(self, ranges):
         for i in range(len(ranges)):
-            h = self.hFun(i)
-            H = self.hMatrixFun(i)
+            h = self.hFunRssi(i)
+            H = self.hMatrixFunRssi(i)
             self.filter.update(np.array([ranges[i]]), H, h, R=self.R_rssi)
-            self.plot(ranges)
+            self.plot(ranges) 
 
     def incorporateImuMeasurement(self, yaw):
-        pass
+        h = lambda x: np.array([x[2]])
+        H = lambda x: np.array([[0, 0, 1]])
+        self.filter.update(np.array([yaw]), H, h, R=self.R_imu, residual=residualFunYaw)
     
     def plotInit(self):
         pass
@@ -82,8 +94,8 @@ class Localization:
         ax.quiver(self.simulation.vehiclePose[0], self.simulation.vehiclePose[1], dx, dy, units='inches', angles='xy')
 
         # estimated pose
-        dx = l * np.cos(self.simulation.vehiclePose[2])
-        dy = l * np.sin(self.simulation.vehiclePose[2])
+        dx = l * np.cos(self.filter.x[2])
+        dy = l * np.sin(self.filter.x[2])
         ax.scatter(self.filter.x[0], self.filter.x[1], color='green', label='vehicle pose')
         ax.quiver(self.filter.x[0], self.filter.x[1], dx, dy, units='inches', angles='xy', color='green')
         # covariance ellipse
@@ -117,7 +129,25 @@ class Test(unittest.TestCase):
         baseStationPowerTxs = [20] * len(baseStationLocations)
         l = Localization(baseStationLocations, baseStationPowerTxs)
         l.plot()
-        l.run()
+        rssiRanges = l.getRangesFromRssi()
+        l.incorporateRssiMeasurements(rssiRanges)
+
+    def testResidualYaw(self):
+        a = 0
+        bs = np.arange(9/4 * np.pi, step=np.pi / 4)
+        print(bs)
+        for b in bs:
+            r = residualFunYaw(a, b)
+            print('%s - %s = %s' %(a, b, r))
+
+    def testUpdateImu(self):
+        baseStationLocations = [(1000, 1000), (-1000, -1000), (-1000, 1000)]
+        baseStationPowerTxs = [20] * len(baseStationLocations)
+        l = Localization(baseStationLocations, baseStationPowerTxs)
+        l.plot()
+        imuYaw = np.pi / 4
+        l.incorporateImuMeasurement(imuYaw)
+        l.plot()
     
     def testPlot(self):
         baseStationLocations = [(1000, 1000), (-1000, -1000), (-1000, 1000)]

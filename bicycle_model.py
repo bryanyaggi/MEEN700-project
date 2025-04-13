@@ -16,6 +16,9 @@ class BicycleModel:
 
     @staticmethod
     def limitYaw(yaw):
+        '''
+        Limits yaw to range (-pi, pi]
+        '''
         if yaw > math.pi:
             yaw -= 2 * math.pi
         elif yaw < -math.pi:
