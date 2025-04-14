@@ -5,6 +5,7 @@ import matplotlib.patches as patches
 import numpy as np
 
 from simulation import Simulation
+from bicycle_model import BicycleModel
 
 import unittest
     
@@ -17,6 +18,24 @@ def residualFunYaw(a, b):
     if y[0] > np.pi:
         y[0] -= (2 * np.pi)
     return y
+
+class LocalizationEkf(ExtendedKalmanFilter):
+    def __init__(self, wheelbase, velStdDev=0.1, steerStdDev=np.pi / 180):
+        ExtendedKalmanFilter.__init__(self, dim_x=3, dim_z=1, dim_u=2)
+        self.model = BicycleModel(wheelbase)
+        #self.velStdDev = velStdDev
+        #self.steerStdDev = steerStdDev
+        self.Q = np.diag([1, 1, 2 * np.pi / 180])
+
+    def predict(self, u, dt):
+        self.F = np.array([
+            [1, 0, -u[0] * np.sin(self.x[2]) * dt],
+            [0, 1, u[0] * np.cos(self.x[2]) * dt],
+            [0, 0, 1]
+        ])
+        self.x = self.model.stepKinematic(self.x, u, timestep=dt)
+        # TODO calcualte Q from control noise and Jacobian: Q = VMV^T
+        self.P = np.dot(self.F, self.P).dot(self.F.T) + self.Q
 
 class Localization:
     def __init__(self, baseStationLocations, baseStationPowerTxs, rssiN=2, speedSound=343, vehiclePose=(0, 0, 0)):
@@ -34,7 +53,8 @@ class Localization:
         self.createFilter()
 
     def createFilter(self):
-        self.filter = ExtendedKalmanFilter(dim_x=3, dim_z=1)
+        #self.filter = ExtendedKalmanFilter(dim_x=3, dim_z=1)
+        self.filter = LocalizationEkf(wheelbase=2.0)
 
         # initial estimate and covariance
         self.filter.x = np.array([0, 0, 0])
@@ -147,6 +167,18 @@ class Test(unittest.TestCase):
         l.plot()
         imuYaw = np.pi / 4
         l.incorporateImuMeasurement(imuYaw)
+        l.plot()
+
+    def testPredict(self):
+        baseStationLocations = [(1000, 1000), (-1000, -1000), (-1000, 1000)]
+        baseStationPowerTxs = [20] * len(baseStationLocations)
+        l = Localization(baseStationLocations, baseStationPowerTxs)
+        l.filter.P = np.diag([1, 1, np.pi / 180])
+        u = np.array([10, 0])
+        print('state: %s, uncertainty: %s' %(l.filter.x, l.filter.P))
+        l.plot()
+        l.filter.predict(u, dt=5)
+        print('state: %s, uncertainty: %s' %(l.filter.x, l.filter.P))
         l.plot()
     
     def testPlot(self):
