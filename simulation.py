@@ -2,11 +2,13 @@
 
 import numpy as np
 
+from bicycle_model import BicycleModel
+
 import unittest
 
 class Simulation:
     def __init__(self, baseStationLocations, baseStationPowerTxs, rssiN=2, rssiStdDev=0.5, speedSound=343,
-                 totStdDev=1e-3, vehiclePose=(0, 0, 0)):
+                 totStdDev=1e-3, wheelbase=2.0, vehiclePose=(0, 0, 0)):
         '''
         baseStationLocations is a list of tuples of the form (x, y) specifying location in meters
         baseStationPowerTxs is a list of transmit powers at 1 meter
@@ -18,6 +20,7 @@ class Simulation:
         self.rssiStdDev = rssiStdDev
         self.speedSound = speedSound
         self.totStdDev = totStdDev
+        self.model = BicycleModel(wheelbase)
         self.vehiclePose = np.array(vehiclePose)
 
     def getRanges(self):
@@ -55,6 +58,12 @@ class Simulation:
     def lateration(self):
         pass
 
+    def move(self, u, timestep=0.1):
+        '''
+        Move vehicle given control input and timestep
+        '''
+        self.vehiclePose = self.model.stepKinematic(self.vehiclePose, u, timestep=timestep)
+
 class Test(unittest.TestCase):
     def testGetRanges(self):
         baseStationLocations = [(1, 1), (-1, -1)]
@@ -78,6 +87,16 @@ class Test(unittest.TestCase):
         rangesActual = sim.getRanges()
         rangesTot = sim.getRangesFromTot()
         self.assertEqual(rangesActual, rangesTot)
+
+    def testMove(self):
+        baseStationLocations = [(1, 1)]
+        baseStationPowerTxs = [20] * len(baseStationLocations)
+        sim = Simulation(baseStationLocations, baseStationPowerTxs)
+        u = np.array([1, 10 * np.pi / 180])
+        for i in range(1, 1001):
+            sim.move(u)
+            if i % 100 == 0:
+                print('vehicle pose: %s' %sim.vehiclePose)
 
 if __name__ == "__main__":
     print("Simulation")
