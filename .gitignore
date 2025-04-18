@@ -1,4 +1,4 @@
 __pycache__
-.bag
-.csv
-.active
+*.bag
+*.csv
+*.active
