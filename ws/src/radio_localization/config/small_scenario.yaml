@@ -1,13 +1,17 @@
 base_stations:
-  - id: 0 # origin
-    latitude: 30.6319022476
-    longitude: -96.4820809338
   - id: 1 # mobile battery
     latitude: 30.637847 # motorcycle trailer
     longitude: -96.487087
+    tx_power: 36
   - id: 41628
     latitude: 30.640111 # north corner
     longitude: -96.484466
+    tx_power: 36
   - id: 3
     latitude: 30.635757 # south corner
     longitude: -96.484472
+    tx_power: 36
+
+origin:
+    latitude: 30.6319022476
+    longitude: -96.4820809338

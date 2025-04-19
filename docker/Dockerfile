@@ -22,7 +22,8 @@ RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sud
 # Install ROS packages
 RUN apt-get update && apt-get upgrade -y \
   ros-noetic-mapviz \
-  ros-noetic-mapviz-plugins
+  ros-noetic-mapviz-plugins \
+  ros-noetic-rviz-satellite
 
 # Install Python packages
 RUN pip3 install utm

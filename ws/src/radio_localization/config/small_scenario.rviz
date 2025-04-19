@@ -117,7 +117,7 @@ Visualization Manager:
       XY Reference: map
       Z Offset: 0
       Z Reference: map
-      Zoom: 16
+      Zoom: 18
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -155,10 +155,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 1.6232818365097046
+      Scale: 2.459684133529663
       Target Frame: map
-      X: -338.3562927246094
-      Y: 661.6563110351562
+      X: -337.7513122558594
+      Y: 646.0828857421875
     Saved: ~
 Window Geometry:
   Displays:
