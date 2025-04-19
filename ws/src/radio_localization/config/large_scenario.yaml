@@ -1,0 +1,10 @@
+base_stations:
+  - id: 1 # mobile battery
+    latitude: 30.629432 # powerline pole
+    longitude: -96.476041
+  - id: 2
+    latitude: 30.621299 # MCC tower
+    longitude: -96.484742
+  - id: 41628
+    latitude: 30.633482 # OTA tower
+    longitude: -96.487490

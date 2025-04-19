@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ros-noetic-radio-localization
-    image: ros-noetic-radio-localization
+    container_name: ros-noetic-radio-loc
+    image: ros-noetic-radio-loc
     user: user
     privileged: true
     environment:
@@ -13,8 +13,9 @@ services:
       - ROS_IP
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-        #- ../ws:/home/user/ws
+      - ../ws:/home/user/ws
       - ~/bags:/home/user/bags
+    working_dir: /home/user/ws
     network_mode: host
     ipc: host
     command: ["bash"]

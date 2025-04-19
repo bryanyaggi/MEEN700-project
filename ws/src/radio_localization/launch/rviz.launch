@@ -1,0 +1,10 @@
+<launch>
+  <rosparam file="$(find radio_localization)/config/small_scenario.yaml" command="load"/>
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find radio_localization)/config/rviz.rviz"/>
+  <node pkg="radio_localization" type="utm_tf.py" name="utm_tf"/>
+  <node pkg="radio_localization" type="marker_publisher.py" name="marker_publisher"/>
+  <node pkg="radio_localization" type="odometry_republisher.py" name="odometry_republisher"/>
+  <!--
+  <node pkg="tf2_ros" type="static_transform_publisher" name="swri_transform" args="0 0 0 0 0 0 map map"/>
+  -->
+</launch>

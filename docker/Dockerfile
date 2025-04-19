@@ -12,11 +12,20 @@ RUN apt-get update && apt-get install -y \
   vim \
   ros-noetic-catkin \
   python3-catkin-tools \
+  python3-pip \
   curl \
   && rm -rf /var/lib/apt/lists/*
 
+# Add ROS apt repo
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
-RUN apt-get update -qq && apt-get upgrade -y
+
+# Install ROS packages
+RUN apt-get update && apt-get upgrade -y \
+  ros-noetic-mapviz \
+  ros-noetic-mapviz-plugins
+
+# Install Python packages
+RUN pip3 install utm
 
 # Create user
 RUN groupadd -g $GID $UNAME
