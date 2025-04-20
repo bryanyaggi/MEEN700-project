@@ -1,5 +1,5 @@
 base_stations:
-  - id: 1 # mobile battery
+  - id: 41341 # mobile battery
     latitude: 30.637847 # motorcycle trailer
     longitude: -96.487087
     tx_power: 36
@@ -7,7 +7,7 @@ base_stations:
     latitude: 30.640111 # north corner
     longitude: -96.484466
     tx_power: 36
-  - id: 3
+  - id: 41602
     latitude: 30.635757 # south corner
     longitude: -96.484472
     tx_power: 36

@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="radio_localization" type="radio_measurement_processor.py" name="radio_measurement_processor"/>
+</launch>

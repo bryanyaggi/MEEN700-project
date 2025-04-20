@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find radio_localization)/launch/rviz.launch">
+    <arg name="use_small_scenario" value="true"/>
+  </include>
+
+  <include file="$(find radio_localization)/launch/localization.launch"/>
+</launch>

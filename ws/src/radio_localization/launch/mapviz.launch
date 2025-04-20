@@ -1,4 +1,8 @@
 <launch>
   <node pkg="mapviz" type="mapviz" name="mapviz"/>
-  <node pkg="tf" type="static_transform_publisher" name="swri_transform" args="0 0 0 0 0 0 /map /origin 100"/>
+  <node pkg="radio_localization" type="odometry_republisher.py" name="odometry_republisher"/>
+  <node pkg="radio_localization" type="origin_republisher.py" name="origin_republisher"/>
+  <!--
+  <node pkg="tf" type="static_transform_publisher" name="swri_transform" args="0 0 0 0 0 0 map origin 100"/>
+  -->
 </launch>
