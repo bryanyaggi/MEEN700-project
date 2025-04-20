@@ -10,6 +10,21 @@ import utm
 class MarkerPublisher:
     def __init__(self):
         self.baseStationPublisher = rospy.Publisher('base_stations', MarkerArray, queue_size=1, latch=True)
+        self.getOrigin()
+
+    def getOrigin(self):
+        if not rospy.has_param('origin'):
+            rospy.logerr("Parameter 'origin' not found.")
+            return
+
+        originParam = rospy.get_param('origin')
+
+        origin = PoseStamped()
+        origin.pose.position.x = originParam['longitude']
+        origin.pose.position.y = originParam['latitude']
+        origin.pose.orientation.w = 1.0
+
+        self.wgs84Tf = Wgs84Transformer(origin)
 
     def publishBaseStationMarkers(self):
         if not rospy.has_param('base_stations'):
@@ -21,16 +36,24 @@ class MarkerPublisher:
         markerArray = MarkerArray()
         for bs in baseStations:
             marker = Marker()
-            marker.header.frame_id = 'utm'
             marker.id = bs['id']
             marker.type = Marker.SPHERE
             marker.action = Marker.ADD
 
             latitude = bs['latitude']
             longitude = bs['longitude']
+
+            '''
+            marker.header.frame_id = 'utm'
             easting, northing, zoneNumber, zoneLetter = utm.from_latlon(latitude, longitude)
             marker.pose.position.x = easting
             marker.pose.position.y = northing
+            '''
+            marker.header.frame_id = 'map'
+            points = self.wgs84Tf.wgs84_to_local_xy([(latitude, longitude)])
+            marker.pose.position.x = points[0][0]
+            marker.pose.position.y = points[0][1]
+
             marker.pose.orientation.w = 1.0
 
             marker.scale.x = 10.0
