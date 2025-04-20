@@ -8,3 +8,7 @@ base_stations:
   - id: 41628
     latitude: 30.633482 # OTA tower
     longitude: -96.487490
+
+origin:
+    latitude: 30.6319022476
+    longitude: -96.4820809338
