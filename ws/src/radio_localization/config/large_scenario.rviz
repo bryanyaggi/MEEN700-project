@@ -7,13 +7,14 @@ Panels:
         - /Global Options1
         - /Status1
         - /Base Stations1
+        - /Ground Truth Odometry1
         - /Ground Truth Odometry1/Shape1
         - /Ground Truth Odometry1/Covariance1
         - /Ground Truth Odometry1/Covariance1/Position1
         - /Ground Truth Odometry1/Covariance1/Orientation1
         - /AerialMapDisplay1
-        - /AerialMapDisplay1/Status1
-      Splitter Ratio: 0.5
+        - /Axes1
+      Splitter Ratio: 0.5158849954605103
     Tree Height: 1747
   - Class: rviz/Selection
     Name: Selection
@@ -44,7 +45,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -57,7 +58,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: base_link
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /base_stations
@@ -92,13 +93,13 @@ Visualization Manager:
         Alpha: 1
         Axes Length: 1
         Axes Radius: 0.10000000149011612
-        Color: 0; 255; 0
+        Color: 255; 255; 0
         Head Length: 5
         Head Radius: 10
         Shaft Length: 10
         Shaft Radius: 5
         Value: Arrow
-      Topic: /localization/utm_pose_repub
+      Topic: /localization/map_pose_repub
       Unreliable: false
       Value: true
     - Alpha: 0.699999988079071
@@ -107,10 +108,10 @@ Visualization Manager:
       Draw Behind: true
       Enabled: true
       Map Frame: map
-      Map transform type: Explicit UTM Frame
+      Map transform type: NavSatFix Messages and Map Frame
       Name: AerialMapDisplay
       Object URI: http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga
-      Topic: /vectornav/GPS
+      Topic: /origin_navsatfix
       UTM Frame: utm
       UTM Zone: 14
       Value: true
@@ -118,6 +119,15 @@ Visualization Manager:
       Z Offset: 0
       Z Reference: map
       Zoom: 17
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 10
+      Name: Axes
+      Radius: 2
+      Reference Frame: base_link
+      Show Trail: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -155,10 +165,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 1.152714729309082
+      Scale: 1.2813776731491089
       Target Frame: map
-      X: 192.67955017089844
-      Y: -453.8657531738281
+      X: 33.78271484375
+      Y: -478.64599609375
     Saved: ~
 Window Geometry:
   Displays:
