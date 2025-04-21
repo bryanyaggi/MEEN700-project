@@ -57,7 +57,7 @@ class RadioMeasurementProcessor:
         self.msg.data[idIndex * self.DATA_LENGTH_PER_RADIO] = rssi
 
     def tofCallback(self, msg):
-        for i in range(0, len(msg.data), 2):
+        for i in range(0, len(msg.data), 3):
             nodeId = msg.data[i]
             
             # Discard if unexpected radios
