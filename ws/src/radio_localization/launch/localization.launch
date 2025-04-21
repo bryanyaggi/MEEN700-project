@@ -1,4 +1,10 @@
 <launch>
+  <!-- Measurement processors -->
   <node pkg="radio_localization" type="radio_measurement_processor.py" name="radio_measurement_processor"/>
   <node pkg="radio_localization" type="yaw_measurement_processor.py" name="yaw_measurement_processor"/>
+
+  <!-- Control processor -->
+  <node pkg="radio_localization" type="control_processor.py" name="control_processor"/>
+
+  <!-- Filter -->
 </launch>

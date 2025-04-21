@@ -23,3 +23,6 @@ rates: # Hz
   velocity_raw: 100
   steer_raw: 100
   control_processed: 10
+
+vehicle:
+  steering_ratio: 15.15 # 15.15:1 steering wheel rotation to road wheel rotation
