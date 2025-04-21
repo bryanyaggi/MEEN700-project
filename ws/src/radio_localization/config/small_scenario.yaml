@@ -15,3 +15,11 @@ base_stations:
 origin:
     latitude: 30.6319022476
     longitude: -96.4820809338
+
+rates: # Hz
+  measurement: 1 # rate of radio measurement
+  yaw_raw: 80
+  yaw_processed: 10
+  velocity_raw: 100
+  steer_raw: 100
+  control_processed: 10
