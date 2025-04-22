@@ -99,8 +99,11 @@ for ii in range(3):
     rssi_hat = dist2rssi(distance, *(popt))
     plt.plot(distance, rssi, line_colors[ii], linestyle='-', label=f'Radio {radio_list[ii]}')    
     plt.plot(distance, rssi_hat, line_colors[ii], linestyle='--', label=f'Fitted Curve (radio {radio_list[ii]}) baseStationTXpwr={optimized_power:.2f}, rssiN={optimized_N:.2f}')
+plt.title("High Power Calibration")
 plt.xlabel("Distance [m]")
 plt.ylabel("RSSI [dB]")
 plt.legend()
 plt.show()
+# %%
+
 # %%
