@@ -3,12 +3,15 @@
 import rospy
 import tf
 from geometry_msgs.msg import PoseWithCovarianceStamped
+from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
 
 from radio_localization.moving_averager import MovingAverager
 
 class YawMeasurementProcessor:
-    def __init__(self):
+    def __init__(self, useMovingAverage=False):
+        self.useMovingAverage = useMovingAverage
+
         # Calculate buffer size and get publish frequency
         if not rospy.has_param('rates'):
             rospy.logerr("Parameter 'rates' not found.")
@@ -22,7 +25,8 @@ class YawMeasurementProcessor:
 
         self.movingAverager = MovingAverager(buffer=buffer)
 
-        rospy.Subscriber('localization/AbsolutePoseMeasurement', PoseWithCovarianceStamped, self.poseCallback)
+        #rospy.Subscriber('localization/AbsolutePoseMeasurement', PoseWithCovarianceStamped, self.poseCallback)
+        rospy.Subscriber('localization/map_pose_repub', Odometry, self.poseCallback)
         self.pub = rospy.Publisher('yaw_measurement', Float64, queue_size=1)
         rospy.Timer(rospy.Duration(1 / publishFrequency), self.timerCallback)
 
@@ -30,10 +34,14 @@ class YawMeasurementProcessor:
         q = msg.pose.pose.orientation
         quaternion = [q.x, q.y, q.z, q.w]
         roll, pitch, yaw = tf.transformations.euler_from_quaternion(quaternion)
-        self.movingAverager.append(yaw)
+        if self.useMovingAverage:
+            self.movingAverager.append(yaw)
+        else:
+            self.msg.data = yaw
 
     def timerCallback(self, event):
-        self.msg.data = self.movingAverager.getAverage()
+        if self.useMovingAverage:
+            self.msg.data = self.movingAverager.getAverage()
         self.pub.publish(self.msg)
 
 if __name__ == '__main__':
