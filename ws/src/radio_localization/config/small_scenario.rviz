@@ -6,16 +6,13 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Base Stations1
         - /Ground Truth Odometry1/Shape1
         - /Ground Truth Odometry1/Covariance1
         - /Ground Truth Odometry1/Covariance1/Position1
         - /Ground Truth Odometry1/Covariance1/Orientation1
-        - /PoseWithCovariance1
         - /PoseWithCovariance1/Covariance1
         - /PoseWithCovariance1/Covariance1/Position1
         - /PoseWithCovariance1/Covariance1/Orientation1
-        - /PoseWithCovariance2
       Splitter Ratio: 0.5
     Tree Height: 641
   - Class: rviz/Selection
@@ -61,6 +58,32 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: base_link
       Value: false
+    - Alpha: 0.699999988079071
+      Blocks: 8
+      Class: rviz_plugins/AerialMapDisplay
+      Draw Behind: true
+      Enabled: true
+      Map Frame: map
+      Map transform type: NavSatFix Messages and Map Frame
+      Name: AerialMapDisplay
+      Object URI: http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga
+      Topic: /origin_navsatfix
+      UTM Frame: utm
+      UTM Zone: 14
+      Value: true
+      XY Reference: map
+      Z Offset: 0
+      Z Reference: map
+      Zoom: 18
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 10
+      Name: Origin
+      Radius: 2
+      Reference Frame: map
+      Show Trail: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /base_stations
@@ -105,6 +128,46 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 10
+      Name: Base Link
+      Radius: 2
+      Reference Frame: base_link
+      Show Trail: false
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/PoseWithCovariance
+      Color: 255; 25; 0
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: false
+      Head Length: 5
+      Head Radius: 10
+      Name: IMU Orientation
+      Queue Size: 10
+      Shaft Length: 10
+      Shaft Radius: 5
+      Shape: Arrow
+      Topic: /localization/AbsolutePoseMeasurement
+      Unreliable: false
+      Value: false
+    - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/PoseWithCovariance
@@ -133,63 +196,6 @@ Visualization Manager:
       Shaft Radius: 5
       Shape: Arrow
       Topic: /radio_localization_pose
-      Unreliable: false
-      Value: true
-    - Alpha: 0.699999988079071
-      Blocks: 8
-      Class: rviz_plugins/AerialMapDisplay
-      Draw Behind: true
-      Enabled: true
-      Map Frame: map
-      Map transform type: NavSatFix Messages and Map Frame
-      Name: AerialMapDisplay
-      Object URI: http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga
-      Topic: /origin_navsatfix
-      UTM Frame: utm
-      UTM Zone: 14
-      Value: true
-      XY Reference: map
-      Z Offset: 0
-      Z Reference: map
-      Zoom: 18
-    - Alpha: 1
-      Class: rviz/Axes
-      Enabled: true
-      Length: 10
-      Name: Axes
-      Radius: 2
-      Reference Frame: base_link
-      Show Trail: false
-      Value: true
-    - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
-      Class: rviz/PoseWithCovariance
-      Color: 255; 25; 0
-      Covariance:
-        Orientation:
-          Alpha: 0.5
-          Color: 255; 255; 127
-          Color Style: Unique
-          Frame: Local
-          Offset: 1
-          Scale: 1
-          Value: true
-        Position:
-          Alpha: 0.30000001192092896
-          Color: 204; 51; 204
-          Scale: 1
-          Value: true
-        Value: true
-      Enabled: true
-      Head Length: 5
-      Head Radius: 10
-      Name: PoseWithCovariance
-      Queue Size: 10
-      Shaft Length: 10
-      Shaft Radius: 5
-      Shape: Arrow
-      Topic: /localization/AbsolutePoseMeasurement
       Unreliable: false
       Value: true
   Enabled: true
@@ -229,10 +235,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 0.9095537662506104
+      Scale: 0.6610642671585083
       Target Frame: map
-      X: -9.350669860839844
-      Y: 526.169677734375
+      X: 25.590696334838867
+      Y: 452.103271484375
     Saved: ~
 Window Geometry:
   Displays:

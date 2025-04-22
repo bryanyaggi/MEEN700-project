@@ -2,15 +2,18 @@ base_stations:
   - id: 41341 # mobile battery
     latitude: 30.637847 # motorcycle trailer
     longitude: -96.487087
-    A: -36.0 # RSSI at 1 meter
+    A: -0.46 #-36.0 # RSSI at 1 meter
+    N: 2.85
   - id: 41628
     latitude: 30.640111 # north corner
     longitude: -96.484466
-    A: -36.0
+    A: 0.47 #-36.0
+    N: 3.05
   - id: 41602
     latitude: 30.635757 # south corner
     longitude: -96.484472
-    A: -36.0
+    A: 7.37 #-36.0
+    N: 3.14
 
 origin:
     latitude: 30.6319022476
@@ -26,4 +29,4 @@ rates: # Hz
 
 vehicle:
   steering_ratio: 15.15 # 15.15:1 steering wheel rotation to road wheel rotation
-  wheelbase: 2.91592
+  wheelbase: 2.91592 # meters

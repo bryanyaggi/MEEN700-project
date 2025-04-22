@@ -35,15 +35,14 @@ class LocalizationEkf(ExtendedKalmanFilter):
         self.P = np.dot(self.F, self.P).dot(self.F.T) + self.Q
 
 class LocalizationFilter:
-    def __init__(self, wheelbase, baseStationLocations, baseStationAs, rssiN=2):
+    def __init__(self, wheelbase, baseStationLocations, baseStationAs, baseStationNs):
         '''
         baseStationLocations is a list of tuples of the form (x, y) specifying location in meters
         baseStationAs is a list of RSSI measurements at 1 meter
         '''
-        
         self.baseStationLocations = np.array(baseStationLocations)
         self.baseStationAs = np.array(baseStationAs)
-        self.rssiN = rssiN
+        self.baseStationNs = np.array(baseStationNs)
         self.SPEED_OF_LIGHT = 299792458.0 # m/s
 
         self.createFilter(wheelbase)
@@ -65,16 +64,18 @@ class LocalizationFilter:
         '''
         xBs, yBs = self.baseStationLocations[baseStationIndex]
         A = self.baseStationAs[baseStationIndex]
-        return lambda x: np.array([A - 10 * self.rssiN * np.log10(np.sqrt((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2))])
+        n = self.baseStationNs[baseStationIndex]
+        return lambda x: np.array([A - 10 * n * np.log10(np.sqrt((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2))])
 
     def hMatrixFunRssi(self, baseStationIndex):
         '''
         Returns function for H
         '''
         xBs, yBs = self.baseStationLocations[baseStationIndex]
+        n = self.baseStationNs[baseStationIndex]
         return lambda x: np.array([[
-            -10 * self.rssiN * (x[0] - xBs) / (((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2) * np.log(10)),
-            -10 * self.rssiN * (x[1] - yBs) / (((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2) * np.log(10)),
+            -10 * n * (x[0] - xBs) / (((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2) * np.log(10)),
+            -10 * n * (x[1] - yBs) / (((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2) * np.log(10)),
             0]])
 
     def incorporateRssiMeasurements(self, rssis):
@@ -103,6 +104,7 @@ class Test(unittest.TestCase):
         simulation = Simulation(baseStationLocations, baseStationAs, vehiclePose=vehiclePose)
         baseStationLocations = [(1000, 1000), (-1000, -1000), (-1000, 1000)]
         baseStationAs = [20] * len(baseStationLocations)
+        baseStationsNs = [3.0] * len(baseStationLocations)
         l = Localization(baseStationLocations, baseStationAs)
         l.plot()
         rssiRanges = l.getRangesFromRssi()
@@ -119,6 +121,7 @@ class Test(unittest.TestCase):
     def testUpdateImu(self):
         baseStationLocations = [(1000, 1000), (-1000, -1000), (-1000, 1000)]
         baseStationAs = [20] * len(baseStationLocations)
+        baseStationsNs = [3.0] * len(baseStationLocations)
         l = Localization(baseStationLocations, baseStationAs)
         l.plot()
         imuYaw = np.pi / 4
@@ -128,6 +131,7 @@ class Test(unittest.TestCase):
     def testPredict(self):
         baseStationLocations = [(1000, 1000), (-1000, -1000), (-1000, 1000)]
         baseStationAs = [20] * len(baseStationLocations)
+        baseStationsNs = [3.0] * len(baseStationLocations)
         l = Localization(baseStationLocations, baseStationAs)
         l.filter.P = np.diag([1, 1, np.pi / 180])
         u = np.array([10, 0])

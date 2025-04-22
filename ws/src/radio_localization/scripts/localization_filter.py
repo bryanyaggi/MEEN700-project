@@ -41,6 +41,7 @@ class LocalizationFilterNode:
         self.baseStationIds = []
         baseStationLocations = []
         baseStationAs = []
+        baseStationNs = []
         for bs in baseStations:
             self.baseStationIds.append(bs['id'])
             latitude = bs['latitude']
@@ -48,9 +49,10 @@ class LocalizationFilterNode:
             points = wgs84Tf.wgs84_to_local_xy([(latitude, longitude)])
             baseStationLocations.append((points[0][0], points[0][1]))
             baseStationAs.append(bs['A'])
+            baseStationNs.append(bs['N'])
 
         # Create filter
-        self.filter = LocalizationFilter(wheelbase, baseStationLocations, baseStationAs)
+        self.filter = LocalizationFilter(wheelbase, baseStationLocations, baseStationAs, baseStationNs)
 
         # Publish estimate with covariance
         self.pub = rospy.Publisher('radio_localization_pose', PoseWithCovarianceStamped, queue_size=1)
