@@ -1,3 +1,4 @@
+# %%
 import bagpy
 from bagpy import bagreader
 import pandas as pd
@@ -28,7 +29,7 @@ def dist2rssi(dist, close_rssi, rssiN):
 # bagfile = 'radio-localization_2025-04-17-00-14-14.bag'
 # bagfile = 'radio-localization_2025-04-16-23-35-41.bag'
 bagfile = 'radio-localization_2025-04-17-00-14-14.bag'
-bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\MEEN700-project\radio-localization_2025-04-17-00-14-14.bag"
+# bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\MEEN700-project\radio-localization_2025-04-17-00-14-14.bag"
 
 # Read data from bagfile and convert to pandas dataframes
 b = bagreader(bagfile)
@@ -43,8 +44,9 @@ gps_df[['easting', 'northing']] = gps_df.apply(lambda row: pd.Series(latlon_to_u
 # Merge and time sync the rssi and gps data
 merged_data = pd.merge_asof(rssi_df, gps_df, on="Time", direction='backward')
 min_northing = merged_data['northing'].iloc[1000:4000].min()
-start_point = [merged_data.loc[merged_data['northing'] == min_northing, ['easting']].iloc[0,0], min_northing]
-merged_data['distance'] = merged_data.apply(lambda row: calculate_distance(row['easting'], row['northing'], start_point) + 2, axis = 1)
+# start_point = [merged_data.loc[merged_data['northing'] == min_northing, ['easting']].iloc[0,0], min_northing]
+# merged_data['distance'] = merged_data.apply(lambda row: calculate_distance(row['easting'], row['northing'], start_point) + 2, axis = 1)
+merged_data['distance'] = merged_data.apply(lambda row: calculate_distance(row['easting'], row['northing'], [merged_data['easting'].iloc[0], merged_data['northing'].iloc[0]]) + 2, axis = 1)
 merged_data['rssi'] = merged_data.apply(lambda row: (row['data_1'] + row['data_2'] + row['data_3'] + row['data_4'])/4, axis = 1)
 
 print(merged_data[['latitude', 'longitude', 'easting', 'northing', 'distance']].head())
@@ -54,6 +56,7 @@ merged_data.to_csv('merged_data.csv', index=False)
 merged_data = merged_data.bfill()
 
 start_ndx = merged_data[merged_data['distance'] == 2.0].index
+print(merged_data['distance'])
 
 # %%
 
@@ -61,29 +64,36 @@ start_ndx = merged_data[merged_data['distance'] == 2.0].index
 plt.figure()
 # plt.plot(merged_data['easting'].iloc[start_ndx[0]:], merged_data['northing'].iloc[start_ndx[0]:])
 plt.plot(merged_data['easting'], merged_data['northing'])
-plt.scatter(start_point[0], start_point[1], s=100, c='r')
-plt.scatter(merged_data['easting'][[0,1000]], merged_data['northing'][[0,1000]], s=100, c='g')
-
+# plt.scatter(start_point[0], start_point[1], s=100, c='r')
+plt.scatter(merged_data['easting'][[0,3900]], merged_data['northing'][[0,3900]], s=100, c='g')
+plt.grid()
 plt.axis('equal')
 
 # Plot rssi over time
-# plt.figure()
-# plt.plot(rssi_df.loc[rssi_df['data_0'] == 41602]['Time'], rssi_df.loc[rssi_df['data_0'] == 41602]['data_1'])
-# plt.plot(rssi_df.loc[rssi_df['data_0'] == 41628]['Time'], rssi_df.loc[rssi_df['data_0'] == 41628]['data_1'])
-# plt.plot(rssi_df.loc[rssi_df['data_0'] == 41341]['Time'], rssi_df.loc[rssi_df['data_0'] == 41341]['data_1'])
-# plt.show()
-
-
-# Plot rssi over distance
 plt.figure()
+plt.title("RSSI vs Time")
+plt.plot(rssi_df.loc[rssi_df['data_0'] == 41602]['Time'], rssi_df.loc[rssi_df['data_0'] == 41602]['data_1'])
+plt.plot(rssi_df.loc[rssi_df['data_0'] == 41628]['Time'], rssi_df.loc[rssi_df['data_0'] == 41628]['data_1'])
+plt.plot(rssi_df.loc[rssi_df['data_0'] == 41341]['Time'], rssi_df.loc[rssi_df['data_0'] == 41341]['data_1'])
+plt.show()
+
+# Plot distance over time
+plt.figure()
+plt.title("Distance vs Time")
+plt.plot(merged_data['Time'],merged_data['distance'])
+plt.show()
+
+
+#  %% Plot rssi over distance
+plt.figure(figsize=(12, 7))
 # plt.plot(merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41602]['distance'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)], merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41602]['rssi'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)], label='Radio 41602')
 # plt.plot(merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41628]['distance'], merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41628]['rssi'], label='Radio 41628')
 # plt.plot(merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41341]['distance'], merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41341]['rssi'], label='Radio 41341')
 radio_list = [41602, 41628, 41341]
 line_colors = ['tab:blue', 'tab:orange', 'tab:green']
 for ii in range(3):
-    distance = merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == radio_list[ii]]['distance'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)]
-    rssi = merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == radio_list[ii]]['rssi'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)]
+    distance = merged_data.iloc[0:3900].loc[merged_data['data_0'] == radio_list[ii]]['distance'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)]
+    rssi = merged_data.iloc[0:3900].loc[merged_data['data_0'] == radio_list[ii]]['rssi'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)]
     popt, _ = curve_fit(dist2rssi, distance, rssi, p0 = [-30, 3])
     optimized_power, optimized_N = popt
     rssi_hat = dist2rssi(distance, *(popt))
