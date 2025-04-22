@@ -9,4 +9,13 @@
 
 3. Start Docker container: `./run.sh`.  
 
-4. Get another shell session in container: `./shell`.
+4. Build workspace: `catkin build`.  
+
+5. Source workspace: `source devel/setup.bash`.  
+
+5. Launch visualization: `roslaunch radio_localization small_scenario.launch`. Use `large_scenario.launch` for large
+   scenario.  
+
+6. Get another shell session in container: `./shell`. Repeat 5.  
+
+7. Play bag file in another shell: `rosbag play ../bags/<ROS bag file>`.  
