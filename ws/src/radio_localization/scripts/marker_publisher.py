@@ -7,24 +7,25 @@ from radio_localization.wgs84_transformer import Wgs84Transformer
 
 import utm
 
+def getWgs84Transformer():
+    if not rospy.has_param('origin'):
+        rospy.logerr("Parameter 'origin' not found.")
+        return
+
+    originParam = rospy.get_param('origin')
+
+    origin = PoseStamped()
+    origin.pose.position.x = originParam['longitude']
+    origin.pose.position.y = originParam['latitude']
+    origin.pose.orientation.w = 1.0
+
+    return Wgs84Transformer(origin)
+
 class MarkerPublisher:
     def __init__(self):
         self.baseStationPublisher = rospy.Publisher('base_stations', MarkerArray, queue_size=1, latch=True)
-        self.getOrigin()
-
-    def getOrigin(self):
-        if not rospy.has_param('origin'):
-            rospy.logerr("Parameter 'origin' not found.")
-            return
-
-        originParam = rospy.get_param('origin')
-
-        origin = PoseStamped()
-        origin.pose.position.x = originParam['longitude']
-        origin.pose.position.y = originParam['latitude']
-        origin.pose.orientation.w = 1.0
-
-        self.wgs84Tf = Wgs84Transformer(origin)
+        self.wgs84Tf = getWgs84Transformer()
+        self.publishBaseStationMarkers()
 
     def publishBaseStationMarkers(self):
         if not rospy.has_param('base_stations'):
@@ -71,6 +72,5 @@ class MarkerPublisher:
 
 if __name__ == '__main__':
     rospy.init_node('marker_publisher')
-    mp = MarkerPublisher()
-    mp.publishBaseStationMarkers()
+    MarkerPublisher()
     rospy.spin()

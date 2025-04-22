@@ -11,8 +11,10 @@ Panels:
         - /Ground Truth Odometry1/Covariance1
         - /Ground Truth Odometry1/Covariance1/Position1
         - /Ground Truth Odometry1/Covariance1/Orientation1
-        - /AerialMapDisplay1
-        - /Axes1
+        - /PoseWithCovariance1
+        - /PoseWithCovariance1/Covariance1
+        - /PoseWithCovariance1/Covariance1/Position1
+        - /PoseWithCovariance1/Covariance1/Orientation1
       Splitter Ratio: 0.5
     Tree Height: 1696
   - Class: rviz/Selection
@@ -101,6 +103,37 @@ Visualization Manager:
       Topic: /localization/map_pose_repub
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/PoseWithCovariance
+      Color: 0; 255; 255
+      Covariance:
+        Orientation:
+          Alpha: 0.30000001192092896
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 10
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Head Length: 5
+      Head Radius: 10
+      Name: PoseWithCovariance
+      Queue Size: 10
+      Shaft Length: 10
+      Shaft Radius: 5
+      Shape: Arrow
+      Topic: /radio_localization_pose
+      Unreliable: false
+      Value: true
     - Alpha: 0.699999988079071
       Blocks: 8
       Class: rviz_plugins/AerialMapDisplay
@@ -164,10 +197,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 2.3899521827697754
+      Scale: 1.3621288537979126
       Target Frame: map
-      X: -337.7513122558594
-      Y: 646.0828857421875
+      X: 18.135332107543945
+      Y: 372.2492980957031
     Saved: ~
 Window Geometry:
   Displays:

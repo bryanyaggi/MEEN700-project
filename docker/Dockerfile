@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
   ros-noetic-catkin \
   python3-catkin-tools \
   python3-pip \
+  python3-tk \
   curl \
   && rm -rf /var/lib/apt/lists/*
 
@@ -28,7 +29,11 @@ RUN apt-get update && apt-get upgrade -y \
   ros-noetic-swri-transform-util
 
 # Install Python packages
-RUN pip3 install utm
+RUN python3 -m pip install --upgrade pip
+RUN pip3 install \
+  utm \
+  numpy==1.19.5 \
+  filterpy
 
 # Create user
 RUN groupadd -g $GID $UNAME
