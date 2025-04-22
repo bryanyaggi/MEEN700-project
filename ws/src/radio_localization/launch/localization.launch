@@ -7,5 +7,5 @@
   <node pkg="radio_localization" type="control_processor.py" name="control_processor"/>
 
   <!-- Filter -->
-  <node pkg="radio_localization" type="localization_filter.py" name="localization_filter"/>
+  <node pkg="radio_localization" type="localization_filter.py" name="localization_filter" output="screen"/>
 </launch>

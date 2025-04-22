@@ -83,6 +83,19 @@ class LocalizationFilterNode:
         self.msg.pose.covariance[35] = covariance[2, 2]
 
     def radioMeasurementsCallback(self, msg):
+        u = [self.velocity, self.steeringAngle]
+        dt = 1
+        self.filter.filter.predict(u, dt)
+
+        rssis = msg.data[::2]
+        print(rssis)
+        tofs = msg.data[1::2]
+        self.filter.incorporateRssiMeasurements(rssis)
+
+        self.filter.incorporateImuMeasurement(self.yaw)
+        
+        self.updateMsgWithState(self.filter.filter.x)
+        self.updateMsgWithCovariance(self.filter.filter.P)
         self.pub.publish(self.msg)
 
     def yawMeasurementCallback(self, msg):
