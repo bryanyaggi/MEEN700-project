@@ -20,12 +20,21 @@ origin:
     longitude: -96.4820809338
 
 rates: # Hz
-  measurement: 1 # rate of radio measurement
+  measurement: 10 # 1; rate of radio measurement
   yaw_raw: 80
-  yaw_processed: 10
+  yaw_processed: 20 # 10
   velocity_raw: 100
   steer_raw: 100
-  control_processed: 10
+  control_processed: 20 # 10
+
+filter:
+  rssi_variance: 400 # dB^2
+  rssi_range_threshold: 500 # meters; ignore RSSI beyond this range
+  tof_variance: 25 # (100 ns)^2
+  tof_range_threshold: 300 # meters; ignore ToF within this range
+  imu_variance: 0.1 # radians^2
+  velocity_variance: 0.2 # (m/2)^2
+  steering_variance: 0.1 # radians^2
 
 vehicle:
   steering_ratio: 15.15 # 15.15:1 steering wheel rotation to road wheel rotation

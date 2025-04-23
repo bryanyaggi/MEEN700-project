@@ -6,6 +6,8 @@ import numpy as np
 
 from radio_localization.bicycle_model import BicycleModel
 from radio_localization.radio_model import SPEED_OF_LIGHT, SECONDS_PER_100NS
+from radio_localization.radio_model import RadioModel
+from radio_localization.silvus_constants import INVALID_RSSI, INVALID_TOF
 
 import unittest
     
@@ -20,10 +22,12 @@ def residualFunYaw(a, b):
     return y
 
 class LocalizationEkf(ExtendedKalmanFilter):
-    def __init__(self, wheelbase, velStdDev=0.1, steerStdDev=np.pi / 180):
+    def __init__(self, wheelbase, velocityVariance, steeringVariance):
         ExtendedKalmanFilter.__init__(self, dim_x=3, dim_z=1, dim_u=2)
         self.model = BicycleModel(wheelbase)
         self.Q = np.diag([1, 1, 1 * np.pi / 180])
+        self.M = np.diag([velocityVariance, steeringVariance])
+        self.wheelbase = wheelbase
 
     def predict(self, u, dt):
         self.F = np.array([
@@ -32,11 +36,22 @@ class LocalizationEkf(ExtendedKalmanFilter):
             [0, 0, 1]
         ])
         self.x = self.model.stepKinematic(self.x, u, timestep=dt)
-        # TODO calcualte Q from control noise and Jacobian: Q = VMV^T
+        
+        # Calcualte Q from control noise and Jacobian: Q = VMV^T
+        V = np.array([
+            [np.cos(self.x[2]) * dt, 0],
+            [np.sin(self.x[2]) * dt, 0],
+            [np.tan(u[1]) * dt / self.wheelbase, u[0] * dt * (np.tan(u[1]) ** 2 + 1) / self.wheelbase]
+        ])
+        self.Q = np.dot(V, self.M).dot(V.T)
+        
         self.P = np.dot(self.F, self.P).dot(self.F.T) + self.Q
 
 class LocalizationFilter:
-    def __init__(self, wheelbase, baseStationLocations, baseStationAs, baseStationNs):
+    def __init__(self, wheelbase, velocityVariance, steeringVariance,
+            baseStationLocations, baseStationAs, baseStationNs,
+            rssiVariance, tofVariance, imuVariance,
+            rssiRangeThreshold=1e3, tofRangeThreshold=0):
         '''
         baseStationLocations is a list of tuples of the form (x, y) specifying location in meters
         baseStationAs is a list of RSSI measurements at 1 meter
@@ -45,19 +60,24 @@ class LocalizationFilter:
         self.baseStationAs = np.array(baseStationAs)
         self.baseStationNs = np.array(baseStationNs)
 
-        self.createFilter(wheelbase)
+        self.radioModel = RadioModel(self.baseStationLocations, self.baseStationAs, self.baseStationNs)
 
-    def createFilter(self, wheelbase):
+        self.createFilter(wheelbase, velocityVariance, steeringVariance)
+        
+        self.R_rssi = np.diag([rssiVariance]) # RSSI
+        self.R_tof = np.diag([tofVariance]) # ToF
+        self.R_imu = np.diag([imuVariance]) # radians
+
+        self.rssiRangeThreshold = rssiRangeThreshold # meters
+        self.tofRangeThreshold = tofRangeThreshold # meters
+
+    def createFilter(self, wheelbase, velocityVariance, steeringVariance):
         #self.filter = ExtendedKalmanFilter(dim_x=3, dim_z=1)
-        self.filter = LocalizationEkf(wheelbase)
+        self.filter = LocalizationEkf(wheelbase, velocityVariance, steeringVariance)
 
         # initial estimate and covariance
         self.filter.x = np.array([0, 0, 0])
         self.filter.P = np.diag([1e6, 1e6, 1.])
-
-        self.R_rssi = np.diag([16]) # RSSI
-        self.R_tof = np.diag([225]) # ToF
-        self.R_imu = np.diag([1 * np.pi / 180]) # radians
 
     def hFunRssi(self, baseStationIndex):
         '''
@@ -66,7 +86,7 @@ class LocalizationFilter:
         xBs, yBs = self.baseStationLocations[baseStationIndex]
         A = self.baseStationAs[baseStationIndex]
         n = self.baseStationNs[baseStationIndex]
-        return lambda x: np.array([A - 10 * n * np.log10(np.sqrt((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2))])
+        return lambda x: np.array([A - 10 * n * np.log10(np.sqrt((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2))])
 
     def hMatrixFunRssi(self, baseStationIndex):
         '''
@@ -97,20 +117,27 @@ class LocalizationFilter:
             0]])
 
     def incorporateRssiMeasurements(self, rssis):
+        rssiRanges = self.radioModel.getRangesFromRssi(rssis)
         for i in range(len(rssis)):
-            if rssis[i] >= 900.0:
+            if rssis[i] >= INVALID_RSSI: # skip if invalid RSSI
                 continue
             h = self.hFunRssi(i)
+            if rssiRanges[i] > self.rssiRangeThreshold: # skip if range too large
+                continue
             H = self.hMatrixFunRssi(i)
+            print("Incorporating RSSI %d, RSSI: %f, range: %f" %(i, rssis[i], rssiRanges[i]))
             self.filter.update(np.array([rssis[i]]), H, h, R=self.R_rssi)
-            #self.plot(ranges)
 
     def incorporateTofMeasurements(self, tofs):
+        tofRanges = self.radioModel.getRangesFromTof(tofs)
         for i in range(len(tofs)):
-            if tofs[i] <= -1:
+            if tofs[i] <= INVALID_TOF: # skip if invalid ToF
                 continue
             h = self.hFunTof(i)
+            if tofRanges[i] < self.tofRangeThreshold: # skip if range too short
+                continue
             H = self.hMatrixFunTof(i)
+            print("Incorporating ToF %d, ToF: %f, range: %f" %(i, tofs[i], tofRanges[i]))
             self.filter.update(np.array([tofs[i]]), H, h, R=self.R_tof)
 
     def incorporateImuMeasurement(self, yaw):

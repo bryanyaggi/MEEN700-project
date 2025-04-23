@@ -51,8 +51,30 @@ class LocalizationFilterNode:
             baseStationAs.append(bs['A'])
             baseStationNs.append(bs['N'])
 
+        # Get rate parameters
+        if not rospy.has_param('rates'):
+            rospy.logerr("Parameter 'rates' not found.")
+            return
+        rates = rospy.get_param('rates')
+        self.dt = 1.0 / rates['measurement']
+
+        # Get filter parameters
+        if not rospy.has_param('filter'):
+            rospy.logerr("Parameter 'filter' not found.")
+            return
+        filter_ = rospy.get_param('filter')
+        rssiVariance = filter_['rssi_variance']
+        rssiRangeThreshold = filter_['rssi_range_threshold']
+        tofVariance = filter_['tof_variance']
+        tofRangeThreshold = filter_['tof_range_threshold']
+        imuVariance = filter_['imu_variance']
+        velocityVariance = filter_['velocity_variance']
+        steeringVariance = filter_['steering_variance']
+
         # Create filter
-        self.filter = LocalizationFilter(wheelbase, baseStationLocations, baseStationAs, baseStationNs)
+        self.filter = LocalizationFilter(wheelbase, velocityVariance, steeringVariance,
+                baseStationLocations, baseStationAs, baseStationNs,
+                rssiVariance, tofVariance, imuVariance, rssiRangeThreshold, tofRangeThreshold)
 
         # Publish estimate with covariance
         self.pub = rospy.Publisher('radio_localization_pose', PoseWithCovarianceStamped, queue_size=1)
@@ -85,17 +107,20 @@ class LocalizationFilterNode:
         self.msg.pose.covariance[35] = covariance[2, 2]
 
     def radioMeasurementsCallback(self, msg):
+        # Predict
         u = [self.velocity, self.steeringAngle]
-        dt = 1
-        self.filter.filter.predict(u, dt)
+        self.filter.filter.predict(u, self.dt)
 
-        rssis = msg.data[::2]
-        tofs = msg.data[1::2]
-        #self.filter.incorporateRssiMeasurements(rssis)
+        # Update with radio measurements
+        rssis = np.array(msg.data[::2])
+        tofs = np.array(msg.data[1::2])
+        self.filter.incorporateRssiMeasurements(rssis)
         self.filter.incorporateTofMeasurements(tofs)
 
+        # Update with yaw measurement
         self.filter.incorporateImuMeasurement(self.yaw)
         
+        # Set state and covariance
         self.updateMsgWithState(self.filter.filter.x)
         self.updateMsgWithCovariance(self.filter.filter.P)
         self.pub.publish(self.msg)

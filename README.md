@@ -5,7 +5,7 @@
 
 2. Build Docker image.  
 `cd docker`  
-`docker compose -f local.yml build`  
+`docker compose -f local.yaml build`  
 
 3. Start Docker container: `./run.sh`.  
 
@@ -18,4 +18,4 @@
 
 6. Get another shell session in container: `./shell`. Repeat 5.  
 
-7. Play bag file in another shell: `rosbag play ../bags/<ROS bag file>`.  
+7. Play bag file in shell: `rosbag play ../bags/<ROS bag file>`.  

@@ -15,12 +15,10 @@ def parseRssiMsg(msg):
     return nodeId, avgRssi
 
 class RadioMeasurementProcessor:
-    def __init__(self, ageThreshold=1000):
+    def __init__(self):
         '''
         ageThreshold in milliseconds
         '''
-        self.ageThreshold = ageThreshold
-
         # Get base station IDs
         if not rospy.has_param('base_stations'):
             rospy.logerr("Parameter 'base stations' not found.")
@@ -36,6 +34,8 @@ class RadioMeasurementProcessor:
             return
         rates = rospy.get_param('rates')
         publishFrequency = rates['measurement']
+
+        self.ageThreshold = 1000 / publishFrequency # period in milliseconds
 
         # Initialize message
         self.msg = Float32MultiArray()
