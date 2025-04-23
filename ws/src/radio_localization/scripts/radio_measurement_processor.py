@@ -2,6 +2,11 @@
 
 import rospy
 from std_msgs.msg import Int32MultiArray, Float32MultiArray
+from radio_localization.silvus_constants import DATA_LENGTH_PER_RADIO, INVALID_RSSI, INVALID_TOF
+
+#DATA_LENGTH_PER_RADIO = 2
+#INVALID_RSSI = 999
+#INVALID_TOF = -1
 
 def parseRssiMsg(msg):
     nodeId = msg.data[0]
@@ -33,11 +38,8 @@ class RadioMeasurementProcessor:
         publishFrequency = rates['measurement']
 
         # Initialize message
-        self.DATA_LENGTH_PER_RADIO = 2
-        self.INVALID_RSSI = 999
-        self.INVALID_TOF = -1
         self.msg = Float32MultiArray()
-        self.msg.data = [self.INVALID_RSSI, self.INVALID_TOF] * len(self.baseStationIds)
+        self.msg.data = [INVALID_RSSI, INVALID_TOF] * len(self.baseStationIds)
 
         # Set up pub/sub
         self.pub = rospy.Publisher('radio_measurements', Float32MultiArray, queue_size=1)
@@ -54,7 +56,7 @@ class RadioMeasurementProcessor:
 
         # Store value in message
         idIndex = self.baseStationIds.index(nodeId)
-        self.msg.data[idIndex * self.DATA_LENGTH_PER_RADIO] = rssi
+        self.msg.data[idIndex * DATA_LENGTH_PER_RADIO] = rssi
 
     def tofCallback(self, msg):
         for i in range(0, len(msg.data), 3):
@@ -69,7 +71,7 @@ class RadioMeasurementProcessor:
             tof = msg.data[i + 1]
             if msg.data[i + 2] > self.ageThreshold:
                 tof = -1
-            self.msg.data[idIndex * self.DATA_LENGTH_PER_RADIO + 1] = tof
+            self.msg.data[idIndex * DATA_LENGTH_PER_RADIO + 1] = tof
 
     def timerCallback(self, event):
         self.pub.publish(self.msg)

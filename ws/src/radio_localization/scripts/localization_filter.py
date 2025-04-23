@@ -91,7 +91,6 @@ class LocalizationFilterNode:
 
         rssis = msg.data[::2]
         tofs = msg.data[1::2]
-        print(tofs)
         #self.filter.incorporateRssiMeasurements(rssis)
         self.filter.incorporateTofMeasurements(tofs)
 

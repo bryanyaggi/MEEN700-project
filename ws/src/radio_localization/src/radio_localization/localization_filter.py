@@ -5,6 +5,7 @@ import matplotlib.patches as patches
 import numpy as np
 
 from radio_localization.bicycle_model import BicycleModel
+from radio_localization.radio_model import SPEED_OF_LIGHT, SECONDS_PER_100NS
 
 import unittest
     
@@ -43,7 +44,6 @@ class LocalizationFilter:
         self.baseStationLocations = np.array(baseStationLocations)
         self.baseStationAs = np.array(baseStationAs)
         self.baseStationNs = np.array(baseStationNs)
-        self.SPEED_OF_LIGHT = 299792458.0 # m/s
 
         self.createFilter(wheelbase)
 
@@ -84,7 +84,7 @@ class LocalizationFilter:
         Returns function for h(x), which calculates the expected z given x
         '''
         xBs, yBs = self.baseStationLocations[baseStationIndex]
-        return lambda x: np.array([np.sqrt((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2) / (self.SPEED_OF_LIGHT * 1e-7)])
+        return lambda x: np.array([np.sqrt((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2) / (SPEED_OF_LIGHT * SECONDS_PER_100NS)])
 
     def hMatrixFunTof(self, baseStationIndex):
         '''
@@ -92,8 +92,8 @@ class LocalizationFilter:
         '''
         xBs, yBs = self.baseStationLocations[baseStationIndex]
         return lambda x: np.array([[
-            (x[0] - xBs) / ((self.SPEED_OF_LIGHT * 1e-7) * np.sqrt((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2)),
-            (x[1] - yBs) / ((self.SPEED_OF_LIGHT * 1e-7) * np.sqrt((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2)),
+            (x[0] - xBs) / ((SPEED_OF_LIGHT * SECONDS_PER_100NS) * np.sqrt((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2)),
+            (x[1] - yBs) / ((SPEED_OF_LIGHT * SECONDS_PER_100NS) * np.sqrt((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2)),
             0]])
 
     def incorporateRssiMeasurements(self, rssis):

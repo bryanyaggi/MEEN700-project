@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Float32MultiArray
 from radio_localization.wgs84_transformer import Wgs84Transformer
 from radio_localization.radio_model import RadioModel
+from radio_localization.silvus_constants import DATA_LENGTH_PER_RADIO, INVALID_RSSI, INVALID_TOF
 
 import utm
 
@@ -27,7 +28,8 @@ def getWgs84Transformer():
 class MarkerPublisher:
     def __init__(self):
         self.baseStationPublisher = rospy.Publisher('base_stations', MarkerArray, queue_size=1, latch=True)
-        self.ringPublisher = rospy.Publisher('station_rings', MarkerArray, queue_size=1 )
+        self.rssiRingPublisher = rospy.Publisher('rssi_rings', MarkerArray, queue_size=1)
+        self.tofRingPublisher = rospy.Publisher('tof_rings', MarkerArray, queue_size=1)
         self.wgs84Tf = getWgs84Transformer()
 
         if not rospy.has_param('base_stations'):
@@ -53,12 +55,11 @@ class MarkerPublisher:
         self.publishBaseStationMarkers() 
 
     def radioMeasurementCallback(self, msg):
-        rssi = np.array([msg.data[i] for i in range(0, len(msg.data), 2)])
-        print(rssi)
-        rospy.loginfo(f"Updated radio measurements: {rssi}")
+        rssis = np.array(msg.data[::DATA_LENGTH_PER_RADIO])
+        tofs = np.array(msg.data[1::DATA_LENGTH_PER_RADIO])
 
-        self.publishRingMarkers(rssi)
-
+        self.publishRssiRingMarkers(rssis)
+        self.publishTofRingMarkers(tofs)
     
     def publishBaseStationMarkers(self):
         if not rospy.has_param('base_stations'):
@@ -68,14 +69,11 @@ class MarkerPublisher:
         baseStations = rospy.get_param('base_stations')
 
         markerArray = MarkerArray()
-        for bs in baseStations:
+        for i in range(len(self.baseStationIds)):
             marker = Marker()
-            marker.id = bs['id']
+            marker.id = self.baseStationIds[i]
             marker.type = Marker.SPHERE
             marker.action = Marker.ADD
-
-            latitude = bs['latitude']
-            longitude = bs['longitude']
 
             '''
             marker.header.frame_id = 'utm'
@@ -84,9 +82,8 @@ class MarkerPublisher:
             marker.pose.position.y = northing
             '''
             marker.header.frame_id = 'map'
-            points = self.wgs84Tf.wgs84_to_local_xy([(latitude, longitude)])
-            marker.pose.position.x = points[0][0]
-            marker.pose.position.y = points[0][1]
+            marker.pose.position.x = self.baseStationLocations[i][0]
+            marker.pose.position.y = self.baseStationLocations[i][1]
 
             marker.pose.orientation.w = 1.0
 
@@ -103,15 +100,17 @@ class MarkerPublisher:
 
         self.baseStationPublisher.publish(markerArray)
     
-    def publishRingMarkers(self, rssi):
+    def publishRssiRingMarkers(self, rssis):
         ringArray = MarkerArray()
         for i in range(len(self.baseStationIds)):
+            if rssis[i] == INVALID_RSSI:
+                continue
             ring = Marker()
             ring.id = self.baseStationIds[i]
             ring.type = Marker.CYLINDER
             ring.action = Marker.ADD
 
-            ranges = self.radioModel.getRangesFromRssi(rssi)
+            ranges = self.radioModel.getRangesFromRssi(rssis)
             ring.header.frame_id = 'map'
             ring.pose.position.x = self.baseStationLocations[i][0]
             ring.pose.position.y = self.baseStationLocations[i][1]
@@ -125,12 +124,43 @@ class MarkerPublisher:
             ring.color.r = 0.0
             ring.color.b = 1.0
             ring.color.g = 0.0
-            ring.color.a = 0.5
+            ring.color.a = 0.25
 
-            ring.lifetime = rospy.Duration(0)
+            ring.lifetime = rospy.Duration(1)
             ringArray.markers.append(ring)
 
-        self.ringPublisher.publish(ringArray)
+        self.rssiRingPublisher.publish(ringArray)
+    
+    def publishTofRingMarkers(self, tofs):
+        ringArray = MarkerArray()
+        for i in range(len(self.baseStationIds)):
+            if tofs[i] == INVALID_TOF:
+                continue
+            ring = Marker()
+            ring.id = self.baseStationIds[i]
+            ring.type = Marker.CYLINDER
+            ring.action = Marker.ADD
+
+            ranges = self.radioModel.getRangesFromTof(tofs)
+            ring.header.frame_id = 'map'
+            ring.pose.position.x = self.baseStationLocations[i][0]
+            ring.pose.position.y = self.baseStationLocations[i][1]
+            ring.pose.position.z = 0.1
+
+            ring.pose.orientation.w = 1.0
+
+            ring.scale.x = ranges[i] * 2.0
+            ring.scale.y = ranges[i] * 2.0
+            ring.scale.z = 1.0
+            ring.color.r = 0.0
+            ring.color.b = 0.0
+            ring.color.g = 1.0
+            ring.color.a = 0.25
+
+            ring.lifetime = rospy.Duration(1)
+            ringArray.markers.append(ring)
+
+        self.tofRingPublisher.publish(ringArray)
 
 if __name__ == '__main__':
     rospy.init_node('marker_publisher')

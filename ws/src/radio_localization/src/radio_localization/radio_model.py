@@ -3,21 +3,23 @@
 import numpy as np
 
 import unittest
+        
+SPEED_OF_LIGHT = 299792458.0 # m/s
+SECONDS_PER_100NS = 1e-7
 
 class RadioModel:
     def __init__(self, baseStationLocations, baseStationAs, baseStationNs, rssiStdDev=0.5,
-            totStdDev=1e-3, vehiclePose=(0, 0, 0)):
+            tofStdDev=1e-3, vehiclePose=(0, 0, 0)):
         '''
         baseStationLocations is a list of tuples of the form (x, y) specifying location in meters
         baseStationAs is a list of RSSI at 1 meter
         vehiclePose is a tuple of (x, y, yaw) in meters and radians
         '''
-        self.SPEED_OF_LIGHT = 299792458.0 # m/s
         self.baseStationLocations = np.array(baseStationLocations)
         self.baseStationAs = np.array(baseStationAs)
         self.baseStationNs =np.array(baseStationNs)
         self.rssiStdDev = rssiStdDev
-        self.totStdDev = totStdDev
+        self.tofStdDev = tofStdDev
         self.vehiclePose = np.array(vehiclePose)
 
     def getRanges(self):
@@ -38,20 +40,19 @@ class RadioModel:
         print("simulated measurements: %s" %measurements)
         return measurements
 
-    def getTotMeasurements(self):
+    def getTofMeasurements(self):
         '''
-        TODO: Add noise
+        Simulate measurements. TODO: Add noise.
         '''
         ranges = self.getRanges()
-        return ranges / self.SPEED_OF_LIGHT
+        return ranges / SPEED_OF_LIGHT
     
     def getRangesFromRssi(self, rssiMeasurements):
         ranges = 10 ** ((self.baseStationAs - rssiMeasurements) / (10 * self.baseStationNs))
         return ranges
 
-    def getRangesFromTot(self):
-        totMeasurements = self.getTotMeasurements()
-        ranges = totMeasurements * self.SPEED_OF_LIGHT
+    def getRangesFromTof(self, tofMeasurements):
+        ranges = tofMeasurements * SECONDS_PER_100NS * SPEED_OF_LIGHT
         return ranges
 
     def lateration(self):
@@ -61,22 +62,27 @@ class Test(unittest.TestCase):
     def testGetRanges(self):
         baseStationLocations = [(1, 1), (-1, -1)]
         baseStationAs = [-20] * len(baseStationLocations)
-        rm = RadioModel(baseStationLocations, baseStationAs)
+        baseStationNs = [2] * len(baseStationLocations)
+        rm = RadioModel(baseStationLocations, baseStationAs, baseStationNs)
         ranges = rm.getRanges()
         print(ranges)
 
     def testRssi(self):
         baseStationLocations = [(1, 1)]
         baseStationAs = [-20] * len(baseStationLocations)
-        rm = RadioModel(baseStationLocations, baseStationAs, rssiStdDev=0)
+        baseStationNs = [2] * len(baseStationLocations)
+        rm = RadioModel(baseStationLocations, baseStationAs, baseStationNs, rssiStdDev=0)
         rangesActual = rm.getRanges()
-        rangesRssi = rm.getRangesFromRssi()
+        simRssiMeasurements = rm.getRssiMeasurements()
+        rangesRssi = rm.getRangesFromRssi(simRssiMeasurements)
         self.assertEqual(rangesActual, rangesRssi)
 
-    def testTot(self):
+    def testTof(self):
         baseStationLocations = [(1, 1)]
         baseStationAs = [-20] * len(baseStationLocations)
-        rm = RadioModel(baseStationLocations, baseStationAs)
+        baseStationNs = [2] * len(baseStationLocations)
+        rm = RadioModel(baseStationLocations, baseStationAs, baseStationNs, tofStdDev=0)
         rangesActual = rm.getRanges()
-        rangesTot = rm.getRangesFromTot()
-        self.assertEqual(rangesActual, rangesTot)
+        simTofMeasurements = rm.getTofMeasurements()
+        rangesTof = rm.getRangesFromTot(simTofMeasurements)
+        self.assertEqual(rangesActual, rangesTof)
