@@ -14,9 +14,7 @@ Panels:
         - /PoseWithCovariance1/Covariance1/Position1
         - /PoseWithCovariance1/Covariance1/Orientation1
         - /MarkerArray1
-        - /MarkerArray1/Status1
         - /MarkerArray2
-        - /MarkerArray2/Status1
       Splitter Ratio: 0.5158849954605103
     Tree Height: 1079
   - Class: rviz/Selection
@@ -96,6 +94,14 @@ Visualization Manager:
         "": true
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /base_station_ids
+      Name: Base Station IDs
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
     - Angle Tolerance: 0.10000000149011612
       Class: rviz/Odometry
       Covariance:
@@ -152,7 +158,7 @@ Visualization Manager:
           Color Style: Unique
           Frame: Local
           Offset: 1
-          Scale: 10
+          Scale: 1
           Value: true
         Position:
           Alpha: 0.30000001192092896
@@ -184,7 +190,7 @@ Visualization Manager:
       Marker Topic: /tof_rings
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
   Enabled: true

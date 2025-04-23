@@ -92,6 +92,14 @@ Visualization Manager:
         "": true
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /base_station_ids
+      Name: Base Station IDs
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
     - Angle Tolerance: 0.10000000149011612
       Class: rviz/Odometry
       Covariance:
@@ -203,7 +211,7 @@ Visualization Manager:
       Marker Topic: /rssi_rings
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -211,7 +219,7 @@ Visualization Manager:
       Marker Topic: /tof_rings
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true

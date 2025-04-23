@@ -28,6 +28,7 @@ def getWgs84Transformer():
 class MarkerPublisher:
     def __init__(self):
         self.baseStationPublisher = rospy.Publisher('base_stations', MarkerArray, queue_size=1, latch=True)
+        self.baseStationIdPublisher = rospy.Publisher('base_station_ids', MarkerArray, queue_size=1, latch=True)
         self.rssiRingPublisher = rospy.Publisher('rssi_rings', MarkerArray, queue_size=1)
         self.tofRingPublisher = rospy.Publisher('tof_rings', MarkerArray, queue_size=1)
         self.wgs84Tf = getWgs84Transformer()
@@ -68,7 +69,7 @@ class MarkerPublisher:
 
         baseStations = rospy.get_param('base_stations')
 
-        markerArray = MarkerArray()
+        markerArraySphere = MarkerArray()
         for i in range(len(self.baseStationIds)):
             marker = Marker()
             marker.id = self.baseStationIds[i]
@@ -96,9 +97,34 @@ class MarkerPublisher:
             marker.color.a = 1.0
 
             marker.lifetime = rospy.Duration(0)
-            markerArray.markers.append(marker)
+            markerArraySphere.markers.append(marker)
 
-        self.baseStationPublisher.publish(markerArray)
+        markerArrayText = MarkerArray()
+        offset = 10.0
+        for i in range(len(self.baseStationIds)):
+            marker = Marker()
+            marker.id = self.baseStationIds[i]
+            marker.type = Marker.TEXT_VIEW_FACING
+            marker.action = Marker.ADD
+            
+            marker.header.frame_id = 'map'
+            marker.pose.position.x = self.baseStationLocations[i][0]
+            marker.pose.position.y = self.baseStationLocations[i][1] - offset
+
+            marker.pose.orientation.w = 1.0
+
+            marker.text = str(self.baseStationIds[i])
+            marker.scale.z = 10.0
+            marker.color.r = 1.0
+            marker.color.b = 0.0
+            marker.color.g = 0.0
+            marker.color.a = 1.0
+            
+            marker.lifetime = rospy.Duration(0)
+            markerArrayText.markers.append(marker)
+
+        self.baseStationPublisher.publish(markerArraySphere)
+        self.baseStationIdPublisher.publish(markerArrayText)
     
     def publishRssiRingMarkers(self, rssis):
         ringArray = MarkerArray()

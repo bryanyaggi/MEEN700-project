@@ -2,18 +2,18 @@ base_stations:
   - id: 41341 # mobile battery
     latitude: 30.637847 # motorcycle trailer
     longitude: -96.487087
-    A: -0.46 #-36.0 # RSSI at 1 meter
-    N: 2.85
+    A: -5.42 #-36.0 # RSSI at 1 meter
+    N: 1.93
   - id: 41628
     latitude: 30.640111 # north corner
     longitude: -96.484466
-    A: 0.47 #-36.0
-    N: 3.05
+    A: 28.8 #-36.0
+    N: 3.8
   - id: 41602
     latitude: 30.635757 # south corner
     longitude: -96.484472
-    A: 7.37 #-36.0
-    N: 3.14
+    A: 31.68 #-36.0
+    N: 3.66
 
 origin:
     latitude: 30.6319022476
