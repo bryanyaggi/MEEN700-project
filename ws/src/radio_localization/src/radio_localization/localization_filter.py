@@ -22,7 +22,7 @@ class LocalizationEkf(ExtendedKalmanFilter):
     def __init__(self, wheelbase, velStdDev=0.1, steerStdDev=np.pi / 180):
         ExtendedKalmanFilter.__init__(self, dim_x=3, dim_z=1, dim_u=2)
         self.model = BicycleModel(wheelbase)
-        self.Q = np.diag([0.5, 0.5, 0.1 * np.pi / 180])
+        self.Q = np.diag([1, 1, 1 * np.pi / 180])
 
     def predict(self, u, dt):
         self.F = np.array([
@@ -56,7 +56,8 @@ class LocalizationFilter:
         self.filter.P = np.diag([1e6, 1e6, 1.])
 
         self.R_rssi = np.diag([16]) # RSSI
-        self.R_imu = np.diag([0 * np.pi / 180]) # radians
+        self.R_tof = np.diag([225]) # ToF
+        self.R_imu = np.diag([1 * np.pi / 180]) # radians
 
     def hFunRssi(self, baseStationIndex):
         '''
@@ -77,6 +78,23 @@ class LocalizationFilter:
             -10 * n * (x[0] - xBs) / (((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2) * np.log(10)),
             -10 * n * (x[1] - yBs) / (((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2) * np.log(10)),
             0]])
+    
+    def hFunTof(self, baseStationIndex):
+        '''
+        Returns function for h(x), which calculates the expected z given x
+        '''
+        xBs, yBs = self.baseStationLocations[baseStationIndex]
+        return lambda x: np.array([np.sqrt((xBs - x[0]) ** 2 + (yBs- x[1]) ** 2) / (self.SPEED_OF_LIGHT * 1e-7)])
+
+    def hMatrixFunTof(self, baseStationIndex):
+        '''
+        Returns function for H
+        '''
+        xBs, yBs = self.baseStationLocations[baseStationIndex]
+        return lambda x: np.array([[
+            (x[0] - xBs) / ((self.SPEED_OF_LIGHT * 1e-7) * np.sqrt((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2)),
+            (x[1] - yBs) / ((self.SPEED_OF_LIGHT * 1e-7) * np.sqrt((xBs - x[0]) ** 2 + (yBs - x[1]) ** 2)),
+            0]])
 
     def incorporateRssiMeasurements(self, rssis):
         for i in range(len(rssis)):
@@ -86,6 +104,14 @@ class LocalizationFilter:
             H = self.hMatrixFunRssi(i)
             self.filter.update(np.array([rssis[i]]), H, h, R=self.R_rssi)
             #self.plot(ranges)
+
+    def incorporateTofMeasurements(self, tofs):
+        for i in range(len(tofs)):
+            if tofs[i] <= -1:
+                continue
+            h = self.hFunTof(i)
+            H = self.hMatrixFunTof(i)
+            self.filter.update(np.array([tofs[i]]), H, h, R=self.R_tof)
 
     def incorporateImuMeasurement(self, yaw):
         h = lambda x: np.array([x[2]])

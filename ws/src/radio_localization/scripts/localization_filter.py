@@ -90,9 +90,10 @@ class LocalizationFilterNode:
         self.filter.filter.predict(u, dt)
 
         rssis = msg.data[::2]
-        print(rssis)
         tofs = msg.data[1::2]
-        self.filter.incorporateRssiMeasurements(rssis)
+        print(tofs)
+        #self.filter.incorporateRssiMeasurements(rssis)
+        self.filter.incorporateTofMeasurements(tofs)
 
         self.filter.incorporateImuMeasurement(self.yaw)
         
