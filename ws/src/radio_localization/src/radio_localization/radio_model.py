@@ -5,7 +5,7 @@ import numpy as np
 import unittest
 
 class RadioModel:
-    def __init__(self, baseStationLocations, baseStationAs, rssiN=2, rssiStdDev=0.5,
+    def __init__(self, baseStationLocations, baseStationAs, baseStationNs, rssiStdDev=0.5,
             totStdDev=1e-3, vehiclePose=(0, 0, 0)):
         '''
         baseStationLocations is a list of tuples of the form (x, y) specifying location in meters
@@ -15,7 +15,7 @@ class RadioModel:
         self.SPEED_OF_LIGHT = 299792458.0 # m/s
         self.baseStationLocations = np.array(baseStationLocations)
         self.baseStationAs = np.array(baseStationAs)
-        self.rssiN = rssiN
+        self.baseStationNs =np.array(baseStationNs)
         self.rssiStdDev = rssiStdDev
         self.totStdDev = totStdDev
         self.vehiclePose = np.array(vehiclePose)
@@ -32,7 +32,7 @@ class RadioModel:
         '''
         ranges = self.getRanges()
         print("ranges: %s" %ranges)
-        measurements = self.baseStationAs - 10 * self.rssiN * np.log10(ranges)
+        measurements = self.baseStationAs - 10 * self.baseStationNs * np.log10(ranges)
         print("expected measurements: %s" %measurements)
         measurements += np.random.normal(0, self.rssiStdDev, size=measurements.size)
         print("simulated measurements: %s" %measurements)
@@ -45,9 +45,8 @@ class RadioModel:
         ranges = self.getRanges()
         return ranges / self.SPEED_OF_LIGHT
     
-    def getRangesFromRssi(self):
-        rssiMeasurements = self.getRssiMeasurements()
-        ranges = 10 ** ((self.baseStationAs - rssiMeasurements) / (10 * self.rssiN))
+    def getRangesFromRssi(self, rssiMeasurements):
+        ranges = 10 ** ((self.baseStationAs - rssiMeasurements) / (10 * self.baseStationNs))
         return ranges
 
     def getRangesFromTot(self):
