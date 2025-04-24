@@ -229,8 +229,22 @@ def plot_results(df, fits, bs_map, var_df=None, var_model=None, stddev_scale=1):
     # map trajectory figure
     fig_map = plt.figure(figsize=(8, 8))
     plt.scatter(df['map_x'], df['map_y'], c='lightgray', s=5, label='Trajectory')
-    for rid, (bx, by) in bs_map.items():
-        plt.scatter(bx, by, marker='X', c='red', s=100, label=f'BS {rid}')
+
+    # get a palette of colors
+    colors = plt.cm.tab10.colors  
+
+    for idx, (rid, (bx, by)) in enumerate(bs_map.items()):
+        color = colors[idx % len(colors)]
+        # plot the base station as a large colored X
+        plt.scatter(bx, by, marker='X', s=150, color=color, edgecolors='white')
+        # annotate the ID on top, centered, in white
+        plt.text(
+            bx, by, str(rid),
+            fontsize=10, fontweight='bold',
+            ha='center', va='center',
+            color='black'
+        )
+
     plt.title('Map Trajectory with Base Stations')
     plt.xlabel('Map X')
     plt.ylabel('Map Y')
@@ -244,19 +258,53 @@ def plot_results(df, fits, bs_map, var_df=None, var_model=None, stddev_scale=1):
     plt.show()
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print(f"Usage: {sys.argv[0]} OUTPUT.csv [small|large] TRIAL_TS")
+    if len(sys.argv) not in [3, 4]:
+        print(f"Usage:\n  {sys.argv[0]} OUTPUT.csv [small|large] [TRIAL_ID (optional)]")
         sys.exit(1)
-    out_csv, scenario, trial_id = sys.argv[1], sys.argv[2].lower(), sys.argv[3]
 
-    df = combine_single_trial(scenario, trial_id)
+    out_csv = sys.argv[1]
+    scenario = sys.argv[2].lower()
+
     bs_map = load_base_stations(scenario)
+
+    # --- SINGLE TRIAL MODE ---
+    if len(sys.argv) == 4:
+        trial_id = sys.argv[3]
+        df = combine_single_trial(scenario, trial_id)
+
+    # --- MULTI TRIAL MODE (ALL) ---
+    else:
+        folder = scenario_folder(scenario)
+        # find all the raw RSSI files
+        filenames = [
+            f for f in os.listdir(folder)
+            if f.startswith("radio-localization_") and f.endswith("-rssi.csv")
+        ]
+        # strip off prefix and suffix so trial_id == "2025-04-18-02-25-19"
+        all_trials = sorted([
+            fname[len("radio-localization_"):-len("-rssi.csv")]
+            for fname in filenames
+        ])
+
+        print(f"Found {len(all_trials)} trials: {all_trials}")
+        dfs = []
+        for trial_id in all_trials:
+            try:
+                print(f"Processing trial {trial_id}...")
+                df_trial = combine_single_trial(scenario, trial_id)
+                dfs.append(df_trial)
+            except Exception as e:
+                print(f"Skipping trial {trial_id} due to error: {e}")
+        if not dfs:
+            print("No valid trials found.")
+            sys.exit(1)
+        df = pd.concat(dfs, ignore_index=True)
+
+    # Calibration and variance modeling
     df, fits = calibrate_per_antenna(df, bs_map)
     var_df, var_model = compute_variance_per_antenna(df)
     print("Variance model per antenna:", var_model)
     df.to_csv(out_csv, index=False)
 
-    # Set stddev_scale to 1 or 2 to toggle ±1σ vs ±2σ
+    # Plotting
     plot_results(df, fits, bs_map, var_df=var_df, var_model=var_model, stddev_scale=2)
-
-
