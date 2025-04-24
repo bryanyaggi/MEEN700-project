@@ -8,10 +8,14 @@ os.system('cls')
 scenario = 'Large'
 
 if scenario == 'Large':
-    bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-03-08-11.bag" # large_scenario
+    bagfile1 = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-03-08-11.bag" # large_scenario
+    bagfile2 = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-03-17-32.bag" # large_scenario
+    bagfiles = [bagfile1, bagfile2]
     yamlfile = 'large_scenario_basestations.yaml'
 elif scenario == 'Small':
-    bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-02-25-19.bag" # small_scenario
+    bagfile1 = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-02-25-19.bag" # small_scenario
+    bagfile2 = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-02-29-18.bag" # small_scenario
+    bagfiles = [bagfile1, bagfile2]
     yamlfile = 'small_scenario_basestations.yaml'
 
 import numpy as np
@@ -62,32 +66,39 @@ config_data, baseStations = getBaseStationPoints(yamlfile)
 
 print("Reading bagfile...")
 # Read data from bagfile and convert to pandas dataframes
-b = bagreader(bagfile)
-rssi_data = b.message_by_topic('/rssi')
-rssi_df = pd.read_csv(rssi_data)[['Time', 'data_0', 'data_1', 'data_2', 'data_3', 'data_4']]
-xy_data = b.message_by_topic("/localization/map_pose")
-xy_df = pd.read_csv(xy_data)[['Time', 'pose.pose.position.x', 'pose.pose.position.y']]
-rssi_df.to_csv('rssi_df.csv', index=False)
-xy_df.to_csv('xy_df.csv', index=False)
+xy_df = pd.DataFrame()
+rssi_df = pd.DataFrame()
+merged_data = pd.DataFrame()
 
-# print(f'{len(rssi_df)=}')
-# print(f'{len(xy_df)=}')
+for bagfile in bagfiles:
+    b = bagreader(bagfile)
+    rssi_data = b.message_by_topic('/rssi')
+    rssi_df1 = pd.read_csv(rssi_data)[['Time', 'data_0', 'data_1', 'data_2', 'data_3', 'data_4']]
+    xy_data = b.message_by_topic("/localization/map_pose")
+    xy_df1 = pd.read_csv(xy_data)[['Time', 'pose.pose.position.x', 'pose.pose.position.y']]
+    rssi_df1.to_csv('rssi_df1.csv', index=False)
+    xy_df1.to_csv('xy_df1.csv', index=False)
 
-print("Formatting data...")
-# Merge and time sync the rssi and gps data
-merged_data = pd.merge_asof(rssi_df, xy_df, on="Time", direction='nearest',tolerance=0.01)
-# print(f'{len(merged_data)=}')
-for ii, radio in enumerate(config_data['markers']):
-    merged_data[f'distance_from_{radio['id']}'] = merged_data.apply(lambda row: calculate_distance(row['pose.pose.position.x'], row['pose.pose.position.y'], [baseStations[0,ii], baseStations[1,ii]]), axis = 1)
-merged_data['rssi'] = merged_data.apply(lambda row: (row['data_1'] + row['data_2'] + row['data_3'] + row['data_4'])/4, axis = 1)
+    print("Formatting data...")
+    # Merge and time sync the rssi and gps data
+    merged_data1 = pd.merge_asof(rssi_df1, xy_df1, on="Time", direction='nearest',tolerance=0.01)
+    # print(f'{len(merged_data1)=}')
+    for ii, radio in enumerate(config_data['markers']):
+        merged_data1[f'distance_from_{radio['id']}'] = merged_data1.apply(lambda row: calculate_distance(row['pose.pose.position.x'], row['pose.pose.position.y'], [baseStations[0,ii], baseStations[1,ii]]), axis = 1)
+    merged_data1['rssi'] = merged_data1.apply(lambda row: (row['data_1'] + row['data_2'] + row['data_3'] + row['data_4'])/4, axis = 1)
+
+    # merged_data1 = merged_data1.bfill()
+    # merged_data1 = merged_data1.ffill()
+    print(f'{len(merged_data1)}')
+    merged_data1 = merged_data1.dropna()
+    print(f'{len(merged_data1)} after dropping na')
+
+    xy_df = pd.concat([xy_df, xy_df1], ignore_index=True)
+    rssi_df = pd.concat([rssi_df, rssi_df1], ignore_index=True)
+    merged_data = pd.concat([merged_data, merged_data1], ignore_index=True)
 
 merged_data.to_csv('merged_data.csv', index=False)
 
-# merged_data = merged_data.bfill()
-# merged_data = merged_data.ffill()
-print(f'{len(merged_data)}')
-merged_data = merged_data.dropna()
-print(f'{len(merged_data)} after dropping na')
 distance_data = merged_data[['distance_from_41341', 'distance_from_41628', 'distance_from_41602', 'data_0', 'rssi']]
 radio_41341_df = distance_data.loc[distance_data['data_0'] == 41341]
 radio_41628_df = distance_data.loc[distance_data['data_0'] == 41628]
@@ -117,14 +128,13 @@ plt.axis('equal')
 
 # Plot rssi over distance
 plt.figure(figsize=(12, 7))
-# plt.plot(merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41602]['distance'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)], merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41602]['rssi'].loc[(merged_data['distance'] > 25) & (merged_data['distance'] < 400)], label='Radio 41602')
-# plt.plot(merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41628]['distance'], merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41628]['rssi'], label='Radio 41628')
-# plt.plot(merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41341]['distance'], merged_data.iloc[start_ndx[0]:].loc[merged_data['data_0'] == 41341]['rssi'], label='Radio 41341')
 radio_list = [41341, 41628, 41602]
 line_colors = ['tab:blue', 'tab:orange', 'tab:green']
 for ii in range(3):
     distance = distance_data.sort_values(by=f'distance_from_{radio_list[ii]}').loc[distance_data['data_0'] == radio_list[ii]][f'distance_from_{radio_list[ii]}']
     rssi = distance_data.sort_values(by=f'distance_from_{radio_list[ii]}').loc[distance_data['data_0'] == radio_list[ii]]['rssi']
+    print(f'{ii=}')
+    print(f'{rssi=}')
     popt, pcov = curve_fit(dist2rssi, distance, rssi, p0 = [-30, 3])
     optimized_power, optimized_N = popt
     rssi_hat = dist2rssi(distance, *(popt))
@@ -133,7 +143,7 @@ for ii in range(3):
     plt.plot(distance, rssi_hat, line_colors[ii], linestyle='--', marker='o', ms=5, mec='r', label=f'Fitted Curve (radio {radio_list[ii]}) A = {optimized_power:.2f}, N = {optimized_N:.2f}, MSE = {meanSquaredError:.2f}')
     print(f'{radio_list[ii]} MSE: {meanSquaredError=}')
     # print(f'{pcov=}')
-plt.title(f"High Power Calibration - {scenario} Scenario")
+plt.title(f"High Power Calibration - {scenario} Scenario, {len(bagfiles)} total runs")
 plt.xlabel("Distance [m]")
 plt.ylabel("RSSI [dB]")
 plt.legend()
