@@ -16,6 +16,10 @@ RUN apt-get update && apt-get install -y \
   python3-pip \
   python3-tk \
   python3-pyqt5 \
+  python3-pandas \
+  python3-scipy \
+  python3-matplotlib \ 
+  python3-yaml \
   curl \
   && rm -rf /var/lib/apt/lists/*
 
