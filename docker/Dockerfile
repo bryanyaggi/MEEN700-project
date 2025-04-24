@@ -10,10 +10,12 @@ RUN apt-get update && apt-get install -y \
   net-tools \
   iputils-ping \
   vim \
+  git \
   ros-noetic-catkin \
   python3-catkin-tools \
   python3-pip \
   python3-tk \
+  python3-pyqt5 \
   curl \
   && rm -rf /var/lib/apt/lists/*
 
