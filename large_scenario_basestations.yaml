@@ -1,0 +1,118 @@
+markers: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "map"
+    ns: ''
+    id: 41341
+    type: 2
+    action: 0
+    pose: 
+      position: 
+        x: 579.0432653478554
+        y: -273.85945461479054
+        z: 0.0
+      orientation: 
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+    scale: 
+      x: 10.0
+      y: 10.0
+      z: 10.0
+    color: 
+      r: 1.0
+      g: 0.0
+      b: 0.0
+      a: 1.0
+    lifetime: 
+      secs: 0
+      nsecs:         0
+    frame_locked: False
+    points: []
+    colors: []
+    text: ''
+    mesh_resource: ''
+    mesh_use_embedded_materials: False
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "map"
+    ns: ''
+    id: 41602
+    type: 2
+    action: 0
+    pose: 
+      position: 
+        x: -255.1141308426911
+        y: -1175.5095338973592
+        z: 0.0
+      orientation: 
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+    scale: 
+      x: 10.0
+      y: 10.0
+      z: 10.0
+    color: 
+      r: 1.0
+      g: 0.0
+      b: 0.0
+      a: 1.0
+    lifetime: 
+      secs: 0
+      nsecs:         0
+    frame_locked: False
+    points: []
+    colors: []
+    text: ''
+    mesh_resource: ''
+    mesh_use_embedded_materials: False
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "map"
+    ns: ''
+    id: 41628
+    type: 2
+    action: 0
+    pose: 
+      position: 
+        x: -518.5625304222979
+        y: 175.13634288798463
+        z: 0.0
+      orientation: 
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+    scale: 
+      x: 10.0
+      y: 10.0
+      z: 10.0
+    color: 
+      r: 1.0
+      g: 0.0
+      b: 0.0
+      a: 1.0
+    lifetime: 
+      secs: 0
+      nsecs:         0
+    frame_locked: False
+    points: []
+    colors: []
+    text: ''
+    mesh_resource: ''
+    mesh_use_embedded_materials: False

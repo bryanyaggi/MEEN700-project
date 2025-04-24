@@ -1,0 +1,118 @@
+markers: 
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "map"
+    ns: ''
+    id: 41341
+    type: 2
+    action: 0
+    pose: 
+      position: 
+        x: -479.92726658281555
+        y: 659.0540357526822
+        z: 0.0
+      orientation: 
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+    scale: 
+      x: 10.0
+      y: 10.0
+      z: 10.0
+    color: 
+      r: 1.0
+      g: 0.0
+      b: 0.0
+      a: 1.0
+    lifetime: 
+      secs: 0
+      nsecs:         0
+    frame_locked: False
+    points: []
+    colors: []
+    text: ''
+    mesh_resource: ''
+    mesh_use_embedded_materials: False
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "map"
+    ns: ''
+    id: 41628
+    type: 2
+    action: 0
+    pose: 
+      position: 
+        x: -228.65424791588117
+        y: 910.0482297151457
+        z: 0.0
+      orientation: 
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+    scale: 
+      x: 10.0
+      y: 10.0
+      z: 10.0
+    color: 
+      r: 1.0
+      g: 0.0
+      b: 0.0
+      a: 1.0
+    lifetime: 
+      secs: 0
+      nsecs:         0
+    frame_locked: False
+    points: []
+    colors: []
+    text: ''
+    mesh_resource: ''
+    mesh_use_embedded_materials: False
+  - 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs:         0
+      frame_id: "map"
+    ns: ''
+    id: 41602
+    type: 2
+    action: 0
+    pose: 
+      position: 
+        x: -229.22946276317674
+        y: 427.3500316096892
+        z: 0.0
+      orientation: 
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+    scale: 
+      x: 10.0
+      y: 10.0
+      z: 10.0
+    color: 
+      r: 1.0
+      g: 0.0
+      b: 0.0
+      a: 1.0
+    lifetime: 
+      secs: 0
+      nsecs:         0
+    frame_locked: False
+    points: []
+    colors: []
+    text: ''
+    mesh_resource: ''
+    mesh_use_embedded_materials: False

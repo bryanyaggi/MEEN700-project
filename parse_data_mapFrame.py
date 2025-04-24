@@ -1,26 +1,13 @@
-# %%
-import bagpy
 from bagpy import bagreader
 import pandas as pd
 import matplotlib.pyplot as plt
-from pyproj import Transformer
+
 import numpy as np
 from scipy.optimize import curve_fit
 from yaml import safe_load
-
-def latlon_to_utm(latitude, longitude):
-    utm_zone = int((longitude + 180) // 6) + 1
-    if latitude >= 0:
-        utm_crs = f'EPSG:326{utm_zone}' # Northern hemisphere
-    else:
-        utm_crs = f'EPSG:327{utm_zone}' # Southern hemisphere
-        
-    transformer = Transformer.from_crs("EPSG:4326", utm_crs, always_xy=True)
-    easting, northing = transformer.transform(longitude, latitude)
-    return easting, northing
     
-def calculate_distance(easting, northing, start_point):
-    dist = np.sqrt((easting-start_point[0])**2 + (northing-start_point[1])**2)
+def calculate_distance(x, y, start_point):
+    dist = np.sqrt((x-start_point[0])**2 + (y-start_point[1])**2)
     return dist
     
 def dist2rssi(dist, close_rssi, rssiN):
@@ -28,74 +15,80 @@ def dist2rssi(dist, close_rssi, rssiN):
     return measurements
 
 def getBaseStationPoints(yamlFile):
-    with open('small_scenario.yaml', 'r') as file:
+    with open(yamlFile, 'r') as file:
         config_data = safe_load(file)
 
-    baseStations = np.zeros((2, len(config_data['base_stations'])))
-
-    for ii, baseStation in enumerate(config_data['base_stations']):
-
-        # print(f'id: {baseStation['id']}')
-        # print(f'   lat: {baseStation['latitude']}')
-        # print(f'   lon: {baseStation['longitude']}')
+    base_stations = np.zeros((2, len(config_data['markers'])))
+    for ii, base_station in enumerate(config_data['markers']):
+        id = base_station['id']
+        x = base_station['pose']['position']['x']
+        y = base_station['pose']['position']['y']
+        base_stations[0,ii] = x
+        base_stations[1,ii] = y
+        # print(f'radio: {id}')
+        # print(f'   x: {x}')
+        # print(f'   y: {y}')
         # print()
 
-        easting, northing = latlon_to_utm(baseStation['latitude'], baseStation['longitude'])
-        baseStations[0,ii] = easting
-        baseStations[1,ii] = northing
+    return config_data, base_stations
 
-    return config_data, baseStations
-config_data, baseStations = getBaseStationPoints('../small_scenario.yaml')
-print(getBaseStationPoints('../small_scenario.yaml')[1])
-
-
-
+print("Getting base station positions...")
+config_data, baseStations = getBaseStationPoints('large_scenario_basestations.yaml')
 
 # bagfile = 'radio-localization_2025-04-17-00-14-14.bag'
 # bagfile = 'radio-localization_2025-04-16-23-35-41.bag'
 # bagfile = 'radio-localization_2025-04-17-00-14-14.bag'
-bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-02-25-19.bag" # small_scenario
+# bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-02-25-19.bag" # small_scenario
+bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\data\radio-localization_2025-04-18-03-08-11.bag" # large_scenario
 # bagfile = r"C:\Users\hanco\OneDrive\Documents\Texas A&M\MS Mechanical Engineering\2025 Spring\MEEN 700\Project\MEEN700-project\radio-localization_2025-04-17-00-14-14.bag"
 
+print("Reading bagfile...")
 # Read data from bagfile and convert to pandas dataframes
 b = bagreader(bagfile)
 rssi_data = b.message_by_topic('/rssi')
-rssi_df = pd.read_csv(rssi_data)
-gps_data = b.message_by_topic("/vectornav/GPS")
-gps_df = pd.read_csv(gps_data)
+rssi_df = pd.read_csv(rssi_data)[['Time', 'data_0', 'data_1', 'data_2', 'data_3', 'data_4']]
+xy_data = b.message_by_topic("/localization/map_pose")
+xy_df = pd.read_csv(xy_data)[['Time', 'pose.pose.position.x', 'pose.pose.position.y']]
 
-# Convert lat lon to UTM coordinates and add as columns in the gps dataframe
-gps_df[['easting', 'northing']] = gps_df.apply(lambda row: pd.Series(latlon_to_utm(row["latitude"], row["longitude"])), axis=1)
+print(f'{len(rssi_df)=}')
+print(f'{len(xy_df)=}')
 
+print("Formatting data...")
 # Merge and time sync the rssi and gps data
-merged_data = pd.merge_asof(rssi_df, gps_df, on="Time", direction='nearest',tolerance=0.01)
-for ii, radio in enumerate(config_data['base_stations']):
-    merged_data[f'distance_from_{radio['id']}'] = merged_data.apply(lambda row: calculate_distance(row['easting'], row['northing'], [baseStations[0,ii], baseStations[1,ii]]), axis = 1)
+merged_data = pd.merge_asof(rssi_df, xy_df, on="Time", direction='nearest',tolerance=0.01)
+print(f'{len(merged_data)=}')
+for ii, radio in enumerate(config_data['markers']):
+    merged_data[f'distance_from_{radio['id']}'] = merged_data.apply(lambda row: calculate_distance(row['pose.pose.position.x'], row['pose.pose.position.y'], [baseStations[0,ii], baseStations[1,ii]]), axis = 1)
 merged_data['rssi'] = merged_data.apply(lambda row: (row['data_1'] + row['data_2'] + row['data_3'] + row['data_4'])/4, axis = 1)
-print(merged_data.columns)
-print(merged_data[['latitude', 'longitude', 'easting', 'northing', 'distance_from_41602']].head())
+
 
 merged_data.to_csv('merged_data.csv', index=False)
 
 merged_data = merged_data.bfill()
+merged_data = merged_data.ffill()
 distance_data = merged_data[['distance_from_41341', 'distance_from_41628', 'distance_from_41602', 'data_0', 'rssi']]
 radio_41341_df = distance_data.loc[distance_data['data_0'] == 41341]
 radio_41628_df = distance_data.loc[distance_data['data_0'] == 41628]
 radio_41602_df = distance_data.loc[distance_data['data_0'] == 41602]
-print(radio_41341_df.head())
-print(radio_41628_df.head())
-print(radio_41602_df.head())
+# print(radio_41341_df.head())
+# print(radio_41628_df.head())
+# print(radio_41602_df.head())
+print(f'{len(radio_41341_df)=}')
+print(f'{len(radio_41628_df)=}')
+print(f'{len(radio_41602_df)=}')
 
+
+print("Plotting...")
 ## Plotting
 
 # Plot UTM
 plt.figure()
 # plt.plot(merged_data['easting'].iloc[start_ndx[0]:], merged_data['northing'].iloc[start_ndx[0]:])
-plt.plot(merged_data['easting'], merged_data['northing'])
+plt.plot(merged_data['pose.pose.position.x'], merged_data['pose.pose.position.y'])
 # plt.scatter(start_point[0], start_point[1], s=100, c='r')
 plt.scatter(baseStations[0,:], baseStations[1,:], s=100, c='g')
 # plt.text(baseStations[0,:], baseStations[1,:], [f'{config_data['base_stations'][ii]['id']}' for ii in range(len(config_data['base_stations']))])
-for ii, radio in enumerate(config_data['base_stations']):
+for ii, radio in enumerate(config_data['markers']):
     plt.text(baseStations[0,ii], baseStations[1,ii], f'{radio['id']}')
 plt.grid()
 plt.axis('equal')
@@ -131,8 +124,9 @@ for ii in range(3):
     rssi_hat = dist2rssi(distance, *(popt))
     plt.plot(distance, rssi, line_colors[ii], linestyle='-', label=f'Radio {radio_list[ii]}')    
     plt.plot(distance, rssi_hat, line_colors[ii], linestyle='--', marker='o', ms=5, mec='r', label=f'Fitted Curve (radio {radio_list[ii]}) baseStationTXpwr={optimized_power:.2f}, rssiN={optimized_N:.2f}')
-plt.title("High Power Calibration - Small Scenario")
+plt.title("High Power Calibration - Large Scenario, Map Frame")
 plt.xlabel("Distance [m]")
 plt.ylabel("RSSI [dB]")
 plt.legend()
 plt.show()
+
