@@ -2,18 +2,18 @@ base_stations:
   - id: 41341 # mobile battery
     latitude: 30.629432 # powerline pole
     longitude: -96.476041
-    A: 8.52 #-36.0 # RSSI at 1 meter
-    N: 2.67
+    A: 0.42 #-36.0 # RSSI at 1 meter
+    N: 2.39
   - id: 41602
     latitude: 30.621299 # MCC tower
     longitude: -96.484742
-    A: -11.71 #-36.0
-    N: 1.73
+    A: -13.63 #-36.0
+    N: 1.68
   - id: 41628
     latitude: 30.633482 # OTA tower
     longitude: -96.487490
-    A: -40.94 #-36.0
-    N: 0.95
+    A: -43.47 #-36.0
+    N: 0.88
 
 origin:
     latitude: 30.6319022476
