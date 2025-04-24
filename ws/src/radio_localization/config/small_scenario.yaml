@@ -28,9 +28,11 @@ rates: # Hz
   control_processed: 20 # 10
 
 filter:
-  rssi_variance: 400 # dB^2
+  rssi_variance: 400 # 4 dB^2
+  rssi_variance_function_of_range: False
   rssi_range_threshold: 500 # meters; ignore RSSI beyond this range
-  tof_variance: 25 # (100 ns)^2
+  tof_variance: 2 # 25 (100 ns)^2
+  tof_variance_function_of_range: True
   tof_range_threshold: 300 # meters; ignore ToF within this range
   imu_variance: 0.1 # radians^2
   velocity_variance: 0.2 # (m/2)^2

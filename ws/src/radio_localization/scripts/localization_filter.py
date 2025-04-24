@@ -70,11 +70,14 @@ class LocalizationFilterNode:
         imuVariance = filter_['imu_variance']
         velocityVariance = filter_['velocity_variance']
         steeringVariance = filter_['steering_variance']
+        rssiVarianceFunctionOfRange = filter_['rssi_variance_function_of_range']
+        tofVarianceFunctionOfRange = filter_['tof_variance_function_of_range']
 
         # Create filter
         self.filter = LocalizationFilter(wheelbase, velocityVariance, steeringVariance,
                 baseStationLocations, baseStationAs, baseStationNs,
-                rssiVariance, tofVariance, imuVariance, rssiRangeThreshold, tofRangeThreshold)
+                rssiVariance, tofVariance, imuVariance, rssiRangeThreshold, tofRangeThreshold,
+                rssiVarianceFunctionOfRange, tofVarianceFunctionOfRange)
 
         # Publish estimate with covariance
         self.pub = rospy.Publisher('radio_localization_pose', PoseWithCovarianceStamped, queue_size=1)

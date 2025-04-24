@@ -2,18 +2,18 @@ base_stations:
   - id: 41341 # mobile battery
     latitude: 30.629432 # powerline pole
     longitude: -96.476041
-    A: -0.46 #-36.0 # RSSI at 1 meter
-    N: 2.85
+    A: 8.52 #-36.0 # RSSI at 1 meter
+    N: 2.67
   - id: 41602
     latitude: 30.621299 # MCC tower
     longitude: -96.484742
-    A: 0.47 #-36.0
-    N: 3.05
+    A: -11.71 #-36.0
+    N: 1.73
   - id: 41628
     latitude: 30.633482 # OTA tower
     longitude: -96.487490
-    A: 7.37 #-36.0
-    N: 3.14
+    A: -40.94 #-36.0
+    N: 0.95
 
 origin:
     latitude: 30.6319022476
@@ -28,10 +28,12 @@ rates: # Hz
   control_processed: 20 # 10
 
 filter:
-  rssi_variance: 400 # dB^2
-  rssi_range_threshold: 500 # meters; ignore RSSI beyond this range
-  tof_variance: 25 # (100 ns)^2
-  tof_range_threshold: 300 # meters; ignore ToF within this range
+  rssi_variance: 4 # 400 # dB^2
+  rssi_variance_function_of_range: True
+  rssi_range_threshold: 0 # 500 meters; ignore RSSI beyond this range
+  tof_variance: 2 # 25 (100 ns)^2
+  tof_variance_function_of_range: True
+  tof_range_threshold: 300 # 300 meters; ignore ToF within this range
   imu_variance: 0.1 # radians^2
   velocity_variance: 0.2 # (m/2)^2
   steering_variance: 0.1 # radians^2

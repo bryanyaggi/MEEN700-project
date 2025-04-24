@@ -4,10 +4,6 @@ import rospy
 from std_msgs.msg import Int32MultiArray, Float32MultiArray
 from radio_localization.silvus_constants import DATA_LENGTH_PER_RADIO, INVALID_RSSI, INVALID_TOF
 
-#DATA_LENGTH_PER_RADIO = 2
-#INVALID_RSSI = 999
-#INVALID_TOF = -1
-
 def parseRssiMsg(msg):
     nodeId = msg.data[0]
     rssis = msg.data[1:]

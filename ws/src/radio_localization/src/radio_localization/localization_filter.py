@@ -51,7 +51,8 @@ class LocalizationFilter:
     def __init__(self, wheelbase, velocityVariance, steeringVariance,
             baseStationLocations, baseStationAs, baseStationNs,
             rssiVariance, tofVariance, imuVariance,
-            rssiRangeThreshold=1e3, tofRangeThreshold=0):
+            rssiRangeThreshold=1e3, tofRangeThreshold=0,
+            rssiVarianceFunctionOfRange=False, tofVarianceFunctionOfRange=True):
         '''
         baseStationLocations is a list of tuples of the form (x, y) specifying location in meters
         baseStationAs is a list of RSSI measurements at 1 meter
@@ -60,7 +61,8 @@ class LocalizationFilter:
         self.baseStationAs = np.array(baseStationAs)
         self.baseStationNs = np.array(baseStationNs)
 
-        self.radioModel = RadioModel(self.baseStationLocations, self.baseStationAs, self.baseStationNs)
+        self.radioModel = RadioModel(self.baseStationLocations, self.baseStationAs, self.baseStationNs,
+                rssiVariance, tofVariance)
 
         self.createFilter(wheelbase, velocityVariance, steeringVariance)
         
@@ -70,6 +72,9 @@ class LocalizationFilter:
 
         self.rssiRangeThreshold = rssiRangeThreshold # meters
         self.tofRangeThreshold = tofRangeThreshold # meters
+
+        self.rssiVarianceFunctionOfRange = rssiVarianceFunctionOfRange
+        self.tofVarianceFunctionOfRange = tofVarianceFunctionOfRange
 
     def createFilter(self, wheelbase, velocityVariance, steeringVariance):
         #self.filter = ExtendedKalmanFilter(dim_x=3, dim_z=1)
@@ -118,6 +123,7 @@ class LocalizationFilter:
 
     def incorporateRssiMeasurements(self, rssis):
         rssiRanges = self.radioModel.getRangesFromRssi(rssis)
+        rssiVars = self.radioModel.getRssiVariances(rssis)
         for i in range(len(rssis)):
             if rssis[i] >= INVALID_RSSI: # skip if invalid RSSI
                 continue
@@ -125,11 +131,16 @@ class LocalizationFilter:
             if rssiRanges[i] > self.rssiRangeThreshold: # skip if range too large
                 continue
             H = self.hMatrixFunRssi(i)
-            print("Incorporating RSSI %d, RSSI: %f, range: %f" %(i, rssis[i], rssiRanges[i]))
-            self.filter.update(np.array([rssis[i]]), H, h, R=self.R_rssi)
+            if self.rssiVarianceFunctionOfRange:
+                R = np.array([[rssiVars[i]]])
+            else:
+                R = self.R_rssi
+            print("Incorporating RSSI %d, RSSI: %f, range: %f var: %f" %(i, rssis[i], rssiRanges[i], R[0, 0]))
+            self.filter.update(np.array([rssis[i]]), H, h, R=R)
 
     def incorporateTofMeasurements(self, tofs):
         tofRanges = self.radioModel.getRangesFromTof(tofs)
+        tofVars = self.radioModel.getTofVariances(tofs)
         for i in range(len(tofs)):
             if tofs[i] <= INVALID_TOF: # skip if invalid ToF
                 continue
@@ -137,8 +148,12 @@ class LocalizationFilter:
             if tofRanges[i] < self.tofRangeThreshold: # skip if range too short
                 continue
             H = self.hMatrixFunTof(i)
-            print("Incorporating ToF %d, ToF: %f, range: %f" %(i, tofs[i], tofRanges[i]))
-            self.filter.update(np.array([tofs[i]]), H, h, R=self.R_tof)
+            if self.tofVarianceFunctionOfRange:
+                R = np.array([[tofVars[i]]])
+            else:
+                R = self.R_tof
+            print("Incorporating ToF %d, ToF: %f, range: %f, var: %f" %(i, tofs[i], tofRanges[i], R[0, 0]))
+            self.filter.update(np.array([tofs[i]]), H, h, R=R)
 
     def incorporateImuMeasurement(self, yaw):
         h = lambda x: np.array([x[2]])
