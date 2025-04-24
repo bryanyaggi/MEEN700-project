@@ -143,14 +143,49 @@ def plot_results(df, fits, var_df, bs_map, title):
         ax.set_title(f'Radio {rid}'); ax.set_xlabel('Distance [m]'); ax.set_ylabel('RSSI [dB]'); ax.legend(); ax.grid()
     fig.suptitle(title); plt.tight_layout(); plt.show()
 
-if __name__=='__main__':
-    if len(sys.argv)!=3: print(f'Usage: {sys.argv[0]} OUTPUT.csv [small|large]'); sys.exit(1)
-    out, sce = sys.argv[1], sys.argv[2].lower()
-    df = combine_data(sorted(os.path.join(scenario_folder(sce),f) for f in os.listdir(scenario_folder(sce)) if any(tok in f for tok in ['rssi','map_pose','current_tof'])))
-    df.to_csv(out,index=False)
-    bs = load_base_stations(sce)
-    df, fits = calibrate_rssi(df,bs)
-    var_df, var_model = compute_variance(df)
-    print('Variance model per radio:', var_model)
-    plot_results(df,fits,var_df,bs,title=f'{sce.capitalize()} Scenario Analysis')
+if __name__ == '__main__':
+    # allow either 3 or 4 arguments:
+    #   combine_avg.py OUTPUT.csv small
+    #   combine_avg.py OUTPUT.csv small 2025-04-18-03-08-11
+    if len(sys.argv) not in (3, 4):
+        print(f"Usage:\n  {sys.argv[0]} OUTPUT.csv [small|large] [TRIAL_ID (optional)]")
+        sys.exit(1)
 
+    out_csv = sys.argv[1]
+    scenario = sys.argv[2].lower()
+    folder = scenario_folder(scenario)
+
+    # --- SINGLE TRIAL MODE ---
+    if len(sys.argv) == 4:
+        trial_id = sys.argv[3]
+        # pick only files for that timestamp
+        csv_paths = sorted(
+            os.path.join(folder, f)
+            for f in os.listdir(folder)
+            if trial_id in f and any(tok in f for tok in ['-rssi.csv', 'map_pose.csv', '-current_tof.csv'])
+        )
+        if not csv_paths:
+            print(f"No files found for trial '{trial_id}' in scenario '{scenario}'.")
+            sys.exit(1)
+
+    # --- MULTI-TRIAL MODE (ALL) ---
+    else:
+        csv_paths = sorted(
+            os.path.join(folder, f)
+            for f in os.listdir(folder)
+            if any(tok in f for tok in ['-rssi.csv', 'map_pose.csv', '-current_tof.csv'])
+        )
+        if not csv_paths:
+            print(f"No CSVs found in '{folder}'.")
+            sys.exit(1)
+
+    # combine, calibrate, variance, plot
+    df = combine_data(csv_paths)
+    df.to_csv(out_csv, index=False)
+
+    bs_map = load_base_stations(scenario)
+    df, fits = calibrate_rssi(df, bs_map)
+    var_df, var_model = compute_variance(df)
+
+    print('Variance model per radio:', var_model)
+    plot_results(df, fits, var_df, bs_map, title=f"{scenario.capitalize()} Scenario Analysis")
